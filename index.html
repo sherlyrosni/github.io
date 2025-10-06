@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelajaran Biner Adaptif</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Pengantar Sistem Biner</h2>
+        <p>Sistem Biner: Basis 2, hanya pakai 0 dan 1. Contoh: 5 (desimal) = 101 (biner). Proses: Bagi desimal dengan 2, ambil sisa.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Biner</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/3</p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <p>Kesulitan? Review: Bagi desimal dengan 2, ambil sisa dari kanan.</p>
+        <p>Contoh: 3 → 11 (3/2=1 sisa 1, 1/2=0 sisa 1).</p>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Konversi 255 (desimal) ke biner: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+
+    <script>
+        let currentQ = 0, score = 0;
+        const questions = [
+            { q: "Konversi 10 (desimal) ke biner?", a: "1010" },
+            { q: "Konversi 13 (desimal) ke biner?", a: "1101" },
+            { q: "Konversi 101 (biner) ke desimal?", a: "5" }
+        ];
+
+        function startQuiz() {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQ < questions.length) {
+                document.getElementById('question').textContent = questions[currentQ].q;
+                document.getElementById('answer').value = '';
+                document.getElementById('feedback').innerHTML = '';
+            } else {
+                checkPathway();
+            }
+        }
+
+        function checkAnswer() {
+            const userAns = document.getElementById('answer').value.trim().toUpperCase();
+            const correctAns = questions[currentQ].a;
+            const fb = document.getElementById('feedback');
+            if (userAns === correctAns) {
+                score++;
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: ' + correctAns + '</div>';
+            }
+            document.getElementById('score').textContent = score + '/3';
+            currentQ++;
+            setTimeout(loadQuestion, 1000);
+        }
+
+        function checkPathway() {
+            document.getElementById('quiz').classList.add('hidden');
+            const scoreRatio = score / 3;
+            if (scoreRatio >= 0.7) {
+                document.getElementById('advanced').classList.remove('hidden');
+            } else {
+                document.getElementById('remedial').classList.remove('hidden');
+            }
+        }
+
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim();
+            const fb = document.getElementById('advFeedback');
+            if (ans === '11111111') {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: 11111111</div>';
+            }
+        }
+
+        function retryQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('remedial').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function showCert() {
+            document.getElementById('advanced').classList.add('hidden');
+            const finalScore = (score / 3) * 100;
+            document.getElementById('finalScore').textContent = finalScore.toFixed(0);
+            document.getElementById('certificate').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
