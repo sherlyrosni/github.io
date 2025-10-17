@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pelajaran Biner Adaptif 4 Level</title>
+    <title>Personalized Learning Simulator</title>
     <style>
         body { font-family: Arial; margin: 20px; }
         .hidden { display: none; }
@@ -15,12 +15,12 @@
 </head>
 <body>
     <div id="intro" class="module">
-        <h2>Pengantar Sistem Biner</h2>
-        <p>Sistem Biner: Basis 2, hanya pakai 0 dan 1. Ada 4 level: Biner ke Desimal, Desimal ke Biner, Operasi Biner (biner), Operasi Biner (desimal).</p>
+        <h2>Pengantar Pembelajaran Personal</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
         <button onclick="startQuiz()">Mulai Kuis</button>
     </div>
     <div id="quiz" class="module hidden">
-        <h2>Kuis Biner</h2>
+        <h2>Kuis Pembelajaran</h2>
         <div id="question"></div>
         <input type="text" id="answer" placeholder="Jawaban">
         <button onclick="checkAnswer()">Submit</button>
@@ -40,13 +40,13 @@
     </div>
     <div id="certificate" class="module hidden">
         <h2>Sertifikat</h2>
-        <p>Selamat! Skor Total: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
     </div>
 
     <script>
         let currentQ = 0, score = 0, selectedQuestions = [], scoresPerLevel = [0, 0, 0, 0];
         const levels = [
-            { // Level 1: Biner ke Desimal
+            { // Level 1: Konversi Biner ke Desimal
                 questions: [
                     { q: "Berapa bilangan desimal dari biner 1010?", a: "10" },
                     { q: "Berapa bilangan desimal dari biner 1111?", a: "15" },
@@ -80,21 +80,21 @@
                     { q: "Berapa bilangan desimal dari biner 11011?", a: "27" }
                 ]
             },
-            { // Level 2: Desimal ke Biner
+            { // Level 2: Konversi Desimal ke Biner
                 questions: [
-                    { q: "Berapa bilangan biner dari desimal 5?", a: "0101" },
+                    { q: "Berapa bilangan biner dari desimal 5?", a: "101" },
                     { q: "Berapa bilangan biner dari desimal 9?", a: "1001" },
                     { q: "Berapa bilangan biner dari desimal 12?", a: "1100" },
                     { q: "Berapa bilangan biner dari desimal 15?", a: "1111" },
-                    { q: "Berapa bilangan biner dari desimal 3?", a: "0011" },
-                    { q: "Berapa bilangan biner dari desimal 7?", a: "0111" },
-                    { q: "Berapa bilangan biner dari desimal 1?", a: "0001" },
-                    { q: "Berapa bilangan biner dari desimal 0?", a: "0000" },
+                    { q: "Berapa bilangan biner dari desimal 3?", a: "11" },
+                    { q: "Berapa bilangan biner dari desimal 7?", a: "111" },
+                    { q: "Berapa bilangan biner dari desimal 1?", a: "1" },
+                    { q: "Berapa bilangan biner dari desimal 0?", a: "0" },
                     { q: "Berapa bilangan biner dari desimal 10?", a: "1010" },
                     { q: "Berapa bilangan biner dari desimal 8?", a: "1000" },
-                    { q: "Berapa bilangan biner dari desimal 2?", a: "0010" },
-                    { q: "Berapa bilangan biner dari desimal 4?", a: "0100" },
-                    { q: "Berapa bilangan biner dari desimal 6?", a: "0110" },
+                    { q: "Berapa bilangan biner dari desimal 2?", a: "10" },
+                    { q: "Berapa bilangan biner dari desimal 4?", a: "100" },
+                    { q: "Berapa bilangan biner dari desimal 6?", a: "110" },
                     { q: "Berapa bilangan biner dari desimal 13?", a: "1101" },
                     { q: "Berapa bilangan biner dari desimal 11?", a: "1011" },
                     { q: "Berapa bilangan biner dari desimal 16?", a: "10000" },
@@ -114,7 +114,7 @@
                     { q: "Berapa bilangan biner dari desimal 30?", a: "11110" }
                 ]
             },
-            { // Level 3: Operasi Biner (Jawaban Biner)
+            { // Level 3: Operasi Biner (Jawaban dalam Biner)
                 questions: [
                     { q: "1010 AND 1100?", a: "1000" },
                     { q: "1010 OR 1100?", a: "1110" },
@@ -148,7 +148,7 @@
                     { q: "0101 OR 1111?", a: "1111" }
                 ]
             },
-            { // Level 4: Operasi Biner (Jawaban Desimal)
+            { // Level 4: Operasi Biner (Jawaban dalam Desimal)
                 questions: [
                     { q: "1010 AND 1100?", a: "8" },
                     { q: "1010 OR 1100?", a: "14" },
@@ -266,7 +266,6 @@
         function checkAdv() {
             const ans = document.getElementById('advAnswer').value.trim();
             const fb = document.getElementById('advFeedback');
-            // 255 (11111111) AND 1010 = 1010 (dec 10)
             if (ans === '1010' || ans === '10') {
                 fb.innerHTML = '<div class="feedback correct">Benar!</div>';
                 showCert();
