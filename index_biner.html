@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Pengantar Pembelajaran Personal</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Konversi 255 (desimal) ke biner, lalu AND dengan 1010: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+
+    <script>
+        let currentQ = 0, score = 0, selectedQuestions = [], scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Konversi Biner ke Desimal
+                questions: [
+                    { q: "Berapa bilangan desimal dari biner 1010?", a: "10" },
+                    { q: "Berapa bilangan desimal dari biner 1111?", a: "15" },
+                    { q: "Berapa bilangan desimal dari biner 1001?", a: "9" },
+                    { q: "Berapa bilangan desimal dari biner 1100?", a: "12" },
+                    { q: "Berapa bilangan desimal dari biner 1011?", a: "11" },
+                    { q: "Berapa bilangan desimal dari biner 0110?", a: "6" },
+                    { q: "Berapa bilangan desimal dari biner 0011?", a: "3" },
+                    { q: "Berapa bilangan desimal dari biner 0001?", a: "1" },
+                    { q: "Berapa bilangan desimal dari biner 1110?", a: "14" },
+                    { q: "Berapa bilangan desimal dari biner 1000?", a: "8" },
+                    { q: "Berapa bilangan desimal dari biner 0101?", a: "5" },
+                    { q: "Berapa bilangan desimal dari biner 0010?", a: "2" },
+                    { q: "Berapa bilangan desimal dari biner 1101?", a: "13" },
+                    { q: "Berapa bilangan desimal dari biner 0111?", a: "7" },
+                    { q: "Berapa bilangan desimal dari biner 0000?", a: "0" },
+                    { q: "Berapa bilangan desimal dari biner 10101?", a: "21" },
+                    { q: "Berapa bilangan desimal dari biner 11010?", a: "26" },
+                    { q: "Berapa bilangan desimal dari biner 11100?", a: "28" },
+                    { q: "Berapa bilangan desimal dari biner 10010?", a: "18" },
+                    { q: "Berapa bilangan desimal dari biner 10111?", a: "23" },
+                    { q: "Berapa bilangan desimal dari biner 11001?", a: "25" },
+                    { q: "Berapa bilangan desimal dari biner 11110?", a: "30" },
+                    { q: "Berapa bilangan desimal dari biner 01111?", a: "15" },
+                    { q: "Berapa bilangan desimal dari biner 10001?", a: "17" },
+                    { q: "Berapa bilangan desimal dari biner 01010?", a: "10" },
+                    { q: "Berapa bilangan desimal dari biner 00101?", a: "5" },
+                    { q: "Berapa bilangan desimal dari biner 11111?", a: "31" },
+                    { q: "Berapa bilangan desimal dari biner 00011?", a: "3" },
+                    { q: "Berapa bilangan desimal dari biner 10100?", a: "20" },
+                    { q: "Berapa bilangan desimal dari biner 11011?", a: "27" }
+                ]
+            },
+            { // Level 2: Konversi Desimal ke Biner
+                questions: [
+                    { q: "Berapa bilangan biner dari desimal 5?", a: "101" },
+                    { q: "Berapa bilangan biner dari desimal 9?", a: "1001" },
+                    { q: "Berapa bilangan biner dari desimal 12?", a: "1100" },
+                    { q: "Berapa bilangan biner dari desimal 15?", a: "1111" },
+                    { q: "Berapa bilangan biner dari desimal 3?", a: "11" },
+                    { q: "Berapa bilangan biner dari desimal 7?", a: "111" },
+                    { q: "Berapa bilangan biner dari desimal 1?", a: "1" },
+                    { q: "Berapa bilangan biner dari desimal 0?", a: "0" },
+                    { q: "Berapa bilangan biner dari desimal 10?", a: "1010" },
+                    { q: "Berapa bilangan biner dari desimal 8?", a: "1000" },
+                    { q: "Berapa bilangan biner dari desimal 2?", a: "10" },
+                    { q: "Berapa bilangan biner dari desimal 4?", a: "100" },
+                    { q: "Berapa bilangan biner dari desimal 6?", a: "110" },
+                    { q: "Berapa bilangan biner dari desimal 13?", a: "1101" },
+                    { q: "Berapa bilangan biner dari desimal 11?", a: "1011" },
+                    { q: "Berapa bilangan biner dari desimal 16?", a: "10000" },
+                    { q: "Berapa bilangan biner dari desimal 17?", a: "10001" },
+                    { q: "Berapa bilangan biner dari desimal 18?", a: "10010" },
+                    { q: "Berapa bilangan biner dari desimal 19?", a: "10011" },
+                    { q: "Berapa bilangan biner dari desimal 20?", a: "10100" },
+                    { q: "Berapa bilangan biner dari desimal 21?", a: "10101" },
+                    { q: "Berapa bilangan biner dari desimal 22?", a: "10110" },
+                    { q: "Berapa bilangan biner dari desimal 23?", a: "10111" },
+                    { q: "Berapa bilangan biner dari desimal 24?", a: "11000" },
+                    { q: "Berapa bilangan biner dari desimal 25?", a: "11001" },
+                    { q: "Berapa bilangan biner dari desimal 26?", a: "11010" },
+                    { q: "Berapa bilangan biner dari desimal 27?", a: "11011" },
+                    { q: "Berapa bilangan biner dari desimal 28?", a: "11100" },
+                    { q: "Berapa bilangan biner dari desimal 29?", a: "11101" },
+                    { q: "Berapa bilangan biner dari desimal 30?", a: "11110" }
+                ]
+            },
+            { // Level 3: Operasi Biner (Jawaban dalam Biner)
+                questions: [
+                    { q: "1010 AND 1100?", a: "1000" },
+                    { q: "1010 OR 1100?", a: "1110" },
+                    { q: "1010 XOR 1100?", a: "0110" },
+                    { q: "NOT 1010?", a: "0101" },
+                    { q: "1111 AND 0000?", a: "0000" },
+                    { q: "1111 OR 0000?", a: "1111" },
+                    { q: "1111 XOR 0000?", a: "1111" },
+                    { q: "NOT 1111?", a: "0000" },
+                    { q: "1011 AND 0110?", a: "0010" },
+                    { q: "1011 OR 0110?", a: "1111" },
+                    { q: "1011 XOR 0110?", a: "1101" },
+                    { q: "NOT 0000?", a: "1111" },
+                    { q: "1001 AND 0101?", a: "0001" },
+                    { q: "1001 OR 0101?", a: "1101" },
+                    { q: "1001 XOR 0101?", a: "1100" },
+                    { q: "NOT 1001?", a: "0110" },
+                    { q: "1110 AND 1010?", a: "1010" },
+                    { q: "1110 OR 1010?", a: "1110" },
+                    { q: "1110 XOR 1010?", a: "0100" },
+                    { q: "NOT 1110?", a: "0001" },
+                    { q: "0011 AND 1100?", a: "0000" },
+                    { q: "0011 OR 1100?", a: "1111" },
+                    { q: "0011 XOR 1100?", a: "1111" },
+                    { q: "NOT 0011?", a: "1100" },
+                    { q: "0110 AND 1001?", a: "0000" },
+                    { q: "0110 OR 1001?", a: "1111" },
+                    { q: "0110 XOR 1001?", a: "1111" },
+                    { q: "NOT 0110?", a: "1001" },
+                    { q: "0101 AND 1111?", a: "0101" },
+                    { q: "0101 OR 1111?", a: "1111" }
+                ]
+            },
+            { // Level 4: Operasi Biner (Jawaban dalam Desimal)
+                questions: [
+                    { q: "1010 AND 1100?", a: "8" },
+                    { q: "1010 OR 1100?", a: "14" },
+                    { q: "1010 XOR 1100?", a: "6" },
+                    { q: "NOT 1010?", a: "5" },
+                    { q: "1111 AND 0000?", a: "0" },
+                    { q: "1111 OR 0000?", a: "15" },
+                    { q: "1111 XOR 0000?", a: "15" },
+                    { q: "NOT 1111?", a: "0" },
+                    { q: "1011 AND 0110?", a: "2" },
+                    { q: "1011 OR 0110?", a: "15" },
+                    { q: "1011 XOR 0110?", a: "13" },
+                    { q: "NOT 0000?", a: "15" },
+                    { q: "1001 AND 0101?", a: "1" },
+                    { q: "1001 OR 0101?", a: "13" },
+                    { q: "1001 XOR 0101?", a: "12" },
+                    { q: "NOT 1001?", a: "6" },
+                    { q: "1110 AND 1010?", a: "10" },
+                    { q: "1110 OR 1010?", a: "14" },
+                    { q: "1110 XOR 1010?", a: "4" },
+                    { q: "NOT 1110?", a: "1" },
+                    { q: "0011 AND 1100?", a: "0" },
+                    { q: "0011 OR 1100?", a: "15" },
+                    { q: "0011 XOR 1100?", a: "15" },
+                    { q: "NOT 0011?", a: "12" },
+                    { q: "0110 AND 1001?", a: "0" },
+                    { q: "0110 OR 1001?", a: "15" },
+                    { q: "0110 XOR 1001?", a: "15" },
+                    { q: "NOT 0110?", a: "9" },
+                    { q: "0101 AND 1111?", a: "5" },
+                    { q: "0101 OR 1111?", a: "15" }
+                ]
+            }
+        ];
+
+        function startQuiz() {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            currentQ = 0;
+            score = 0;
+            scoresPerLevel = [0, 0, 0, 0];
+            selectedQuestions = [];
+            for (let i = 0; i < levels.length; i++) {
+                const shuffled = levels[i].questions.sort(() => 0.5 - Math.random()).slice(0, 5);
+                selectedQuestions = selectedQuestions.concat(shuffled.map(q => ({ ...q, level: i })));
+            }
+            selectedQuestions = selectedQuestions.sort(() => 0.5 - Math.random()); // Acak urutan semua soal
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQ < selectedQuestions.length) {
+                const q = selectedQuestions[currentQ];
+                document.getElementById('question').textContent = q.q;
+                document.getElementById('answer').value = '';
+                document.getElementById('feedback').innerHTML = '';
+                document.getElementById('currentLevel').textContent = `Level ${q.level + 1} (🟦🟨🟩🟥)[${currentQ + 1}/20]`;
+            } else {
+                checkPathway();
+            }
+        }
+
+        function checkAnswer() {
+            const userAns = document.getElementById('answer').value.trim().toUpperCase();
+            const correctAns = selectedQuestions[currentQ].a;
+            const level = selectedQuestions[currentQ].level;
+            const fb = document.getElementById('feedback');
+            if (userAns === correctAns) {
+                score++;
+                scoresPerLevel[level]++;
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: ' + correctAns + '</div>';
+            }
+            document.getElementById('score').textContent = score + '/20';
+            currentQ++;
+            setTimeout(loadQuestion, 1000);
+        }
+
+        function checkPathway() {
+            document.getElementById('quiz').classList.add('hidden');
+            const levelScores = scoresPerLevel.map(s => s / 5 * 100); // Skor per level (dari 5 soal)
+            const weakestLevel = levelScores.indexOf(Math.min(...levelScores.filter(s => s < 70)));
+            if (weakestLevel >= 0) {
+                showRemedial(weakestLevel);
+            } else {
+                document.getElementById('advanced').classList.remove('hidden');
+            }
+        }
+
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Level 1: Konversi Biner ke Desimal. Review: Jumlahkan 2^n untuk setiap 1 (dari kanan). Contoh: 1010 = (0×2^0) + (1×2^1) + (0×2^2) + (1×2^3) = 10.</p>';
+            } else if (level === 1) {
+                content += '<p>Level 2: Konversi Desimal ke Biner. Review: Bagi berulang dengan 2, ambil sisa dari kanan. Contoh: 5 → 5/2=2 sisa 1, 2/2=1 sisa 0, 1/2=0 sisa 1 → 101.</p>';
+            } else if (level === 2) {
+                content += '<p>Level 3: Operasi Biner (Jawaban Biner). Review: AND (1 jika keduanya 1), OR (1 jika salah satu 1), XOR (1 jika berbeda), NOT (balikkan bit). Contoh: 1010 AND 1100 = 1000.</p>';
+            } else if (level === 3) {
+                content += '<p>Level 4: Operasi Biner (Jawaban Desimal). Review: Hitung hasil biner dulu, lalu konversi ke desimal. Contoh: 1010 AND 1100 = 1000 → 8.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+
+        function retryQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('remedial').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            startQuiz();
+        }
+
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim();
+            const fb = document.getElementById('advFeedback');
+            if (ans === '1010' || ans === '10') {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: 1010 (atau 10).</div>';
+            }
+        }
+
+        function showCert() {
+            document.getElementById('advanced').classList.add('hidden');
+            const finalScore = (score / 20) * 100;
+            document.getElementById('finalScore').textContent = finalScore.toFixed(0);
+            document.getElementById('certificate').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
