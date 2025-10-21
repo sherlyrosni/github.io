@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaringan Komputer Kuis</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+        select, button { margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Pengantar Kuis Jaringan Komputer</h2>
+        <p>Pilih tingkat kesulitan: 
+            <select id="level" onchange="setLevel()">
+                <option value="mudah">Mudah (20 soal)</option>
+                <option value="sedang">Sedang (20 soal)</option>
+                <option value="sulit">Sulit (10 soal)</option>
+            </select>
+        </p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Jaringan Komputer</h2>
+        <div id="question"></div>
+        <div id="options"></div>
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/<span id="total"></span> | Tingkat: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Refleksi dan Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+
+    <script>
+        let currentQ = 0, score = 0, selectedQuestions = [], currentLevel = "mudah";
+        const levels = {
+            mudah: {
+                questions: [
+                    { q: "Siapa tokoh yang terkait dengan pengembangan ARPANET pada tahun 1960-an?", options: ["a) Berners-Lee", "b) Leonard Kleinrock", "c) Paul Mockapetris", "d) Ray Tomlinson"], a: "b" },
+                    { q: "Pada dekade berapa World Wide Web dikembangkan?", options: ["a) 1970-an", "b) 1980-an", "c) 1990-an", "d) 2000-an"], a: "c" },
+                    { q: "Siapa yang menciptakan World Wide Web?", options: ["a) Charles Babbage", "b) Berners-Lee", "c) Ray Tomlinson", "d) Leonard Kleinrock"], a: "b" },
+                    { q: "Jaringan apa yang mencakup area geografis kecil seperti kantor?", options: ["a) WAN", "b) MAN", "c) LAN", "d) PAN"], a: "c" },
+                    { q: "Apa kepanjangan dari LAN?", options: ["a) Local Access Network", "b) Local Area Network", "c) Large Area Network", "d) Linked Area Network"], a: "b" },
+                    { q: "Jaringan apa yang menghubungkan perangkat di area kota?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "b" },
+                    { q: "Apa kepanjangan dari PAN?", options: ["a) Personal Area Network", "b) Private Access Network", "c) Public Area Network", "d) Personal Access Node"], a: "a" },
+                    { q: "Jaringan apa yang menggunakan kabel untuk konektivitas?", options: ["a) Jaringan Nirkabel", "b) Jaringan Kabel", "c) Jaringan Client-Server", "d) Jaringan Peer-to-Peer"], a: "b" },
+                    { q: "Jaringan apa yang memungkinkan komunikasi langsung antar perangkat tanpa server pusat?", options: ["a) Jaringan Client-Server", "b) Jaringan Peer-to-Peer", "c) Jaringan Full Duplex", "d) Jaringan Simplex"], a: "b" },
+                    { q: "Mode transmisi apa yang memungkinkan data mengalir dua arah secara bersamaan?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Single Duplex"], a: "c" },
+                    { q: "Apa salah satu dampak jaringan komputer terhadap kebudayaan manusia?", options: ["a) Mengurangi komunikasi", "b) Membatasi akses informasi", "c) Meningkatkan interaksi sosial", "d) Mengurangi peluang bisnis"], a: "c" },
+                    { q: "Siapa yang terkait dengan pengembangan email pada tahun 1970-an?", options: ["a) Leonard Kleinrock", "b) Ray Tomlinson", "c) Paul Mockapetris", "d) Berners-Lee"], a: "b" },
+                    { q: "Pada dekade berapa media sosial mulai menghubungkan dunia?", options: ["a) 1980-an", "b) 1990-an", "c) 2000-an", "d) 2010-an"], a: "c" },
+                    { q: "Mode transmisi apa yang hanya memungkinkan data mengalir satu arah?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
+                    { q: "Jaringan apa yang cocok untuk perangkat IoT?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
+                    { q: "Apa dampak jaringan komputer terhadap pendidikan?", options: ["a) Mengurangi akses informasi", "b) Meningkatkan akses informasi", "c) Membatasi interaksi sosial", "d) Mengurangi hiburan"], a: "b" },
+                    { q: "Jaringan apa yang menggunakan teknologi Wi-Fi?", options: ["a) Jaringan Kabel", "b) Jaringan Nirkabel", "c) Jaringan Client-Server", "d) Jaringan Simplex"], a: "b" },
+                    { q: "Siapa yang terkait dengan alamat yang mudah diingat pada tahun 1980-an?", options: ["a) Charles Babbage", "b) Paul Mockapetris", "c) Berners-Lee", "d) Ray Tomlinson"], a: "b" },
+                    { q: "Jaringan apa yang bergantung pada server pusat untuk komunikasi?", options: ["a) Jaringan Peer-to-Peer", "b) Jaringan Client-Server", "c) Jaringan Nirkabel", "d) Jaringan Simplex"], a: "b" },
+                    { q: "Apa dampak jaringan komputer terhadap politik?", options: ["a) Mengurangi aktivisme", "b) Meningkatkan aktivisme", "c) Membatasi komunikasi", "d) Mengurangi hiburan"], a: "b" }
+                ]
+            },
+            sedang: {
+                questions: [
+                    { q: "Jaringan apa yang mencakup area geografis luas seperti negara?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" },
+                    { q: "Apa perkembangan utama jaringan komputer pada tahun 1960-an?", options: ["a) World Wide Web", "b) ARPANET", "c) Media Sosial", "d) IoT"], a: "b" },
+                    { q: "Jaringan apa yang paling cocok untuk menghubungkan perangkat dalam satu gedung?", options: ["a) WAN", "b) MAN", "c) LAN", "d) PAN"], a: "c" },
+                    { q: "Apa ciri utama mode transmisi Half Duplex?", options: ["a) Data mengalir satu arah saja", "b) Data mengalir dua arah, tetapi tidak bersamaan", "c) Data mengalir dua arah secara bersamaan", "d) Tidak ada aliran data"], a: "b" },
+                    { q: "Apa salah satu bidang yang dipengaruhi oleh jaringan komputer?", options: ["a) Pertanian", "b) Ekonomi dan bisnis", "c) Astronomi", "d) Geologi"], a: "b" },
+                    { q: "Jaringan apa yang biasanya digunakan untuk perangkat pribadi seperti ponsel dan jam tangan pintar?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
+                    { q: "Apa yang dikembangkan oleh Paul Mockapetris pada tahun 1980-an?", options: ["a) Email", "b) Sistem nama domain", "c) World Wide Web", "d) IoT"], a: "b" },
+                    { q: "Mode transmisi apa yang digunakan pada sistem televisi?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
+                    { q: "Apa dampak jaringan komputer terhadap hiburan?", options: ["a) Mengurangi pilihan hiburan", "b) Meningkatkan pilihan hiburan", "c) Membatasi akses informasi", "d) Mengurangi interaksi sosial"], a: "b" },
+                    { q: "Jaringan apa yang memungkinkan komunikasi tanpa server pusat?", options: ["a) Jaringan Client-Server", "b) Jaringan Peer-to-Peer", "c) Jaringan Full Duplex", "d) Jaringan Simplex"], a: "b" },
+                    { q: "Apa teknologi yang sering digunakan pada jaringan nirkabel?", options: ["a) Kabel Ethernet", "b) Wi-Fi", "c) Kabel serat optik", "d) Kabel koaksial"], a: "b" },
+                    { q: "Apa yang dimaksud dengan IoT dalam konteks jaringan komputer?", options: ["a) Internet of Technology", "b) Internet of Things", "c) Integration of Technology", "d) Internet of Transmission"], a: "b" },
+                    { q: "Jaringan apa yang menghubungkan beberapa kota?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" },
+                    { q: "Mode transmisi apa yang memungkinkan komunikasi telepon?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Single Duplex"], a: "c" },
+                    { q: "Apa dampak jaringan komputer terhadap komunikasi?", options: ["a) Mengurangi interaksi sosial", "b) Meningkatkan interaksi sosial", "c) Membatasi akses informasi", "d) Mengurangi aktivisme"], a: "b" },
+                    { q: "Siapa yang terkait dengan pengembangan komputer pribadi?", options: ["a) Leonard Kleinrock", "b) Ray Tomlinson", "c) Charles Babbage", "d) Paul Mockapetris"], a: "c" },
+                    { q: "Jaringan apa yang menggunakan Bluetooth untuk konektivitas?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
+                    { q: "Apa yang terjadi pada tahun 2000-an dalam sejarah jaringan komputer?", options: ["a) Pengembangan ARPANET", "b) Munculnya World Wide Web", "c) Menghubungkan dunia dengan media sosial", "d) Pengembangan komputer pribadi"], a: "c" },
+                    { q: "Mode transmisi apa yang cocok untuk radio?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
+                    { q: "Apa salah satu manfaat jaringan komputer untuk bisnis?", options: ["a) Mengurangi efisiensi", "b) Meningkatkan efisiensi", "c) Membatasi komunikasi", "d) Mengurangi inovasi"], a: "b" }
+                ]
+            },
+            sulit: {
+                questions: [
+                    { q: "Tokoh mana yang salah dikaitkan dengan kontribusi dalam dokumen?", options: ["a) Leonard Kleinrock - ARPANET", "b) Ray Tomlinson - Email", "c) Charles Babbage - Alamat yang mudah diingat", "d) Berners-Lee - World Wide Web"], a: "c" },
+                    { q: "Apa perbedaan utama antara jaringan Client-Server dan Peer-to-Peer?", options: ["a) Client-Server menggunakan teknologi nirkabel, P2P menggunakan kabel", "b) Client-Server bergantung pada server pusat, P2P memungkinkan komunikasi langsung antar perangkat", "c) Client-Server bersifat simplex, P2P bersifat full duplex", "d) Client-Server terbatas pada area kecil, P2P mencakup area luas"], a: "b" },
+                    { q: "Mode transmisi apa yang paling cocok untuk sistem walkie-talkie?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Dual Duplex"], a: "b" },
+                    { q: "Mana yang BUKAN dampak langsung jaringan komputer terhadap kebudayaan manusia?", options: ["a) Meningkatkan komunikasi", "b) Meningkatkan akses pendidikan", "c) Meningkatkan tenaga kerja manual", "d) Meningkatkan pilihan hiburan"], a: "c" },
+                    { q: "Apa signifikansi kontribusi Paul Mockapetris pada tahun 1980-an?", options: ["a) Pengembangan email", "b) Penciptaan sistem nama domain", "c) Penemuan World Wide Web", "d) Pembentukan IoT"], a: "b" },
+                    { q: "Jaringan apa yang paling mungkin menggunakan teknologi Bluetooth?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
+                    { q: "Apa dampak IoT dalam konteks jaringan komputer?", options: ["a) Mengurangi konektivitas perangkat", "b) Menghubungkan semua perangkat untuk otomatisasi", "c) Mengurangi akses internet", "d) Menghapus platform media sosial"], a: "b" },
+                    { q: "Kombinasi jenis jaringan dan teknologi mana yang paling akurat berdasarkan dokumen?", options: ["a) LAN - Nirkabel, WAN - Kabel", "b) PAN - Kabel, MAN - Nirkabel", "c) LAN - Kabel, PAN - Nirkabel", "d) WAN - Nirkabel, MAN - Kabel"], a: "c" },
+                    { q: "Apa yang terjadi pada tahun 1990-an dalam sejarah jaringan komputer?", options: ["a) Pengembangan ARPANET", "b) Penciptaan World Wide Web", "c) Munculnya media sosial", "d) Pengembangan IoT"], a: "b" },
+                    { q: "Jaringan apa yang paling cocok untuk menghubungkan beberapa negara?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" }
+                ]
+            }
+        };
+
+        function setLevel() {
+            currentLevel = document.getElementById('level').value;
+            currentQ = 0; score = 0;
+            document.getElementById('intro').classList.remove('hidden');
+            document.getElementById('quiz').classList.add('hidden');
+            document.getElementById('remedial').classList.add('hidden');
+            document.getElementById('certificate').classList.add('hidden');
+        }
+
+        function startQuiz() {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            currentQ = 0;
+            score = 0;
+            selectedQuestions = levels[currentLevel].questions.sort(() => 0.5 - Math.random()).slice(0, currentLevel === "sulit" ? 10 : 20);
+            document.getElementById('total').textContent = selectedQuestions.length;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQ < selectedQuestions.length) {
+                const q = selectedQuestions[currentQ];
+                document.getElementById('question').textContent = q.q;
+                const optionsDiv = document.getElementById('options');
+                optionsDiv.innerHTML = '';
+                q.options.forEach(opt => {
+                    const label = document.createElement('label');
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'answer';
+                    radio.value = opt[0];
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(` ${opt}`));
+                    optionsDiv.appendChild(label);
+                    optionsDiv.appendChild(document.createElement('br'));
+                });
+                document.getElementById('feedback').innerHTML = '';
+                document.getElementById('currentLevel').textContent = currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1) + ` [${currentQ + 1}/${selectedQuestions.length}]`;
+            } else {
+                checkPathway();
+            }
+        }
+
+        function checkAnswer() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (selected) {
+                const userAns = selected.value[0];
+                const correctAns = selectedQuestions[currentQ].a;
+                const fb = document.getElementById('feedback');
+                if (userAns === correctAns) {
+                    score++;
+                    fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                } else {
+                    fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: ' + selectedQuestions[currentQ].options.find(opt => opt[0] === correctAns) + '</div>';
+                }
+                document.getElementById('score').textContent = score;
+                currentQ++;
+                setTimeout(loadQuestion, 1000);
+            } else {
+                alert("Pilih jawaban terlebih dahulu!");
+            }
+        }
+
+        function checkPathway() {
+            document.getElementById('quiz').classList.add('hidden');
+            const percentage = (score / selectedQuestions.length) * 100;
+            if (percentage < 70) {
+                showRemedial();
+            } else {
+                showCert();
+            }
+        }
+
+        function showRemedial() {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Refleksi dan Remedial</h3>';
+            content += '<p>Skor Anda: ' + ((score / selectedQuestions.length) * 100).toFixed(0) + '% (Kurang dari 70%). Anda perlu belajar ulang materi berikut:</p>';
+            if (currentLevel === "mudah") {
+                content += '<ul>';
+                content += '<li><strong>Sejarah Jaringan:</strong> Pelajari tokoh-tokoh seperti Leonard Kleinrock (ARPANET) dan Berners-Lee (WWW). Fokus pada timeline perkembangan (1960-an hingga 2000-an).</li>';
+                content += '<li><strong>Jenis Jaringan:</strong> Pahami perbedaan LAN, MAN, WAN, dan PAN berdasarkan jangkauan geografis.</li>';
+                content += '<li><strong>Mode Transmisi:</strong> Kuasai konsep Simplex, Half Duplex, dan Full Duplex dengan contoh praktis (TV, telepon, walkie-talkie).</li>';
+                content += '<li><strong>Dampak Kebudayaan:</strong> Tinjau bagaimana jaringan memengaruhi komunikasi, pendidikan, bisnis, dan politik.</li>';
+                content += '</ul>';
+            } else if (currentLevel === "sedang") {
+                content += '<ul>';
+                content += '<li><strong>Perkembangan Teknologi:</strong> Pelajari detail ARPANET, email (Ray Tomlinson), dan sistem nama domain (Paul Mockapetris).</li>';
+                content += '<li><strong>Teknologi Jaringan:</strong> Fokus pada perbedaan jaringan kabel vs nirkabel (Wi-Fi, Bluetooth) dan aplikasinya (IoT, PAN).</li>';
+                content += '<li><strong>Mode Transmisi Lanjutan:</strong> Pahami penerapan Half Duplex (walkie-talkie) dan Full Duplex (telepon) dalam kehidupan sehari-hari.</li>';
+                content += '<li><strong>Dampak Ekonomi:</strong> Tinjau bagaimana jaringan meningkatkan efisiensi bisnis dan hiburan.</li>';
+                content += '</ul>';
+            } else if (currentLevel === "sulit") {
+                content += '<ul>';
+                content += '<li><strong>Analisis Tokoh:</strong> Identifikasi kontribusi spesifik setiap tokoh dan hindari kesalahan asosiasi (misal, Charles Babbage tidak terkait alamat domain).</li>';
+                content += '<li><strong>Struktur Jaringan:</strong> Kuasai perbedaan mendalam Client-Server vs Peer-to-Peer dan kombinasi teknologi (LAN-Kabel, PAN-Nirkabel).</li>';
+                content += '<li><strong>IoT dan Dampak:</strong> Pelajari bagaimana IoT menghubungkan perangkat dan dampaknya pada otomatisasi, bukan tenaga kerja manual.</li>';
+                content += '<li><strong>Timeline Lanjutan:</strong> Fokus pada peristiwa spesifik seperti WWW (1990-an) dan media sosial (2000-an).</li>';
+                content += '</ul>';
+            }
+            content += '<p>Belajar ulang materi di slide PPT, lalu coba lagi!</p>';
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+
+        function retryQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('remedial').classList.add('hidden');
+            document.getElementById('quiz').classList.remove('hidden');
+            startQuiz();
+        }
+
+        function showCert() {
+            document.getElementById('certificate').classList.remove('hidden');
+            const finalScore = (score / selectedQuestions.length) * 100;
+            document.getElementById('finalScore').textContent = finalScore.toFixed(0);
+        }
+    </script>
+</body>
+</html>
