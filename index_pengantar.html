@@ -187,30 +187,30 @@
         function showRemedial() {
             const remedialContent = document.getElementById('remedialContent');
             let content = '<h3>Refleksi dan Remedial</h3>';
-            content += '<p>Skor Anda: ' + ((score / selectedQuestions.length) * 100).toFixed(0) + '% (Kurang dari 70%). Anda perlu belajar ulang materi berikut:</p>';
+            content += '<p>Skor Anda: ' + percentage.toFixed(0) + '% (Kurang dari 70%). Silakan baca kembali PPT "Materi Pertemuan 1 - Jaringan Komputer" untuk memahami lebih lanjut. Berikut rangkuman singkat:</p>';
             if (currentLevel === "mudah") {
                 content += '<ul>';
-                content += '<li><strong>Sejarah Jaringan:</strong> Pelajari tokoh-tokoh seperti Leonard Kleinrock (ARPANET) dan Berners-Lee (WWW). Fokus pada timeline perkembangan (1960-an hingga 2000-an).</li>';
-                content += '<li><strong>Jenis Jaringan:</strong> Pahami perbedaan LAN, MAN, WAN, dan PAN berdasarkan jangkauan geografis.</li>';
-                content += '<li><strong>Mode Transmisi:</strong> Kuasai konsep Simplex, Half Duplex, dan Full Duplex dengan contoh praktis (TV, telepon, walkie-talkie).</li>';
-                content += '<li><strong>Dampak Kebudayaan:</strong> Tinjau bagaimana jaringan memengaruhi komunikasi, pendidikan, bisnis, dan politik.</li>';
+                content += '<li><strong>Sejarah Jaringan:</strong> Dimulai dengan ARPANET (Leonard Kleinrock, 1960-an), email (Ray Tomlinson, 1970-an), sistem nama domain (Paul Mockapetris, 1980-an), World Wide Web (Berners-Lee, 1990-an), hingga media sosial dan IoT (2000-an).</li>';
+                content += '<li><strong>Jenis Jaringan:</strong> LAN (lokal), MAN (kota), WAN (luas), PAN (pribadi) berdasarkan jangkauan; kabel/nirkabel berdasarkan teknologi; client-server atau P2P berdasarkan fungsi.</li>';
+                content += '<li><strong>Mode Transmisi:</strong> Simplex (satu arah, misal TV), Half Duplex (dua arah bergantian, misal walkie-talkie), Full Duplex (dua arah bersamaan, misal telepon).</li>';
+                content += '<li><strong>Dampak:</strong> Meningkatkan komunikasi, pendidikan, bisnis, hiburan, dan aktivisme politik.</li>';
                 content += '</ul>';
             } else if (currentLevel === "sedang") {
                 content += '<ul>';
-                content += '<li><strong>Perkembangan Teknologi:</strong> Pelajari detail ARPANET, email (Ray Tomlinson), dan sistem nama domain (Paul Mockapetris).</li>';
-                content += '<li><strong>Teknologi Jaringan:</strong> Fokus pada perbedaan jaringan kabel vs nirkabel (Wi-Fi, Bluetooth) dan aplikasinya (IoT, PAN).</li>';
-                content += '<li><strong>Mode Transmisi Lanjutan:</strong> Pahami penerapan Half Duplex (walkie-talkie) dan Full Duplex (telepon) dalam kehidupan sehari-hari.</li>';
-                content += '<li><strong>Dampak Ekonomi:</strong> Tinjau bagaimana jaringan meningkatkan efisiensi bisnis dan hiburan.</li>';
+                content += '<li><strong>Perkembangan:</strong> ARPANET sebagai cikal bakal internet, email oleh Ray Tomlinson, sistem nama domain oleh Paul Mockapetris, dan IoT menghubungkan perangkat.</li>';
+                content += '<li><strong>Teknologi:</strong> Nirkabel (Wi-Fi, Bluetooth) untuk PAN/LAN, kabel untuk stabilitas WAN; aplikasi seperti IoT untuk otomatisasi.</li>';
+                content += '<li><strong>Mode Transmisi:</strong> Half Duplex cocok untuk komunikasi bergantian, Full Duplex untuk komunikasi real-time seperti telepon.</li>';
+                content += '<li><strong>Dampak Ekonomi:</strong> Jaringan meningkatkan efisiensi bisnis dan memperluas pasar global.</li>';
                 content += '</ul>';
             } else if (currentLevel === "sulit") {
                 content += '<ul>';
-                content += '<li><strong>Analisis Tokoh:</strong> Identifikasi kontribusi spesifik setiap tokoh dan hindari kesalahan asosiasi (misal, Charles Babbage tidak terkait alamat domain).</li>';
-                content += '<li><strong>Struktur Jaringan:</strong> Kuasai perbedaan mendalam Client-Server vs Peer-to-Peer dan kombinasi teknologi (LAN-Kabel, PAN-Nirkabel).</li>';
-                content += '<li><strong>IoT dan Dampak:</strong> Pelajari bagaimana IoT menghubungkan perangkat dan dampaknya pada otomatisasi, bukan tenaga kerja manual.</li>';
-                content += '<li><strong>Timeline Lanjutan:</strong> Fokus pada peristiwa spesifik seperti WWW (1990-an) dan media sosial (2000-an).</li>';
+                content += '<li><strong>Tokoh dan Kontribusi:</strong> Leonard Kleinrock (ARPANET), Ray Tomlinson (email), Paul Mockapetris (DNS), Berners-Lee (WWW); Charles Babbage tidak terkait alamat domain.</li>';
+                content += '<li><strong>Jaringan Lanjutan:</strong> Client-Server bergantung pada server, P2P komunikasi langsung; LAN-Kabel, PAN-Nirkabel adalah kombinasi umum.</li>';
+                content += '<li><strong>IoT:</strong> Menghubungkan perangkat untuk otomatisasi, bukan meningkatkan tenaga kerja manual.</li>';
+                content += '<li><strong>Timeline:</strong> WWW (1990-an), media sosial (2000-an) adalah tonggak penting.</li>';
                 content += '</ul>';
             }
-            content += '<p>Belajar ulang materi di slide PPT, lalu coba lagi!</p>';
+            content += '<p>Belajar ulang dari PPT dan coba lagi setelah memahami rangkuman di atas!</p>';
             remedialContent.innerHTML = content;
             document.getElementById('remedial').classList.remove('hidden');
         }
