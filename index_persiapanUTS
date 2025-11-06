@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Persiapan UTS (Rangkuman 1-6)</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Persiapan UTS (Rangkuman 1-6)</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa dampak jaringan pada pengabelan?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar (Campur 1-6)
+                questions: [
+                    { q: "Apa ARPANET?", a: "Jaringan pertama" },
+                    { q: "Apa LAN?", a: "Local Area Network" },
+                    { q: "Apa OSI layer 1?", a: "Physical" },
+                    { q: "Apa hub?", a: "Penghubung" },
+                    { q: "Berapa desimal biner 1010?", a: "10" },
+                    { q: "Berapa hexa 10?", a: "A" },
+                    { q: "Apa UTP?", a: "Kabel twisted" },
+                    { q: "Apa dampak jaringan?", a: "Komunikasi cepat" },
+                    { q: "Apa TCP/IP layer 1?", a: "Network Access" },
+                    { q: "Apa router?", a: "Routing" },
+                    { q: "Berapa biner 5?", a: "101" },
+                    { q: "Berapa desimal hexa F?", a: "15" },
+                    { q: "Apa RJ45?", a: "Konektor" },
+                    { q: "Apa WAN?", a: "Wide Area Network" },
+                    { q: "Apa OSI layer 7?", a: "Application" },
+                    { q: "Apa switch?", a: "MAC based" },
+                    { q: "NOT 1010?", a: "0101" },
+                    { q: "A + 5 hexa?", a: "F" },
+                    { q: "Apa crimping tool?", a: "Alat crimping" },
+                    { q: "Apa jenis jaringan?", a: "LAN, WAN" },
+                    { q: "Apa TCP/IP layer 4?", a: "Application" },
+                    { q: "Apa firewall?", a: "Keamanan" },
+                    { q: "Berapa desimal biner 1111?", a: "15" },
+                    { q: "Berapa hexa 15?", a: "F" },
+                    { q: "Apa T568B?", a: "Standar warna" },
+                    { q: "Apa sejarah internet?", a: "1969 ARPANET" },
+                    { q: "Apa OSI layer 3?", a: "Network" },
+                    { q: "Apa repeater?", a: "Penguat" },
+                    { q: "1010 AND 1100?", a: "1000" },
+                    { q: "F - 3 hexa?", a: "C" },
+                    { q: "Apa straight cable?", a: "Device berbeda" },
+                    { q: "Apa dampak sosial?", a: "Koneksi global" },
+                    { q: "Apa TCP/IP layer 2?", a: "Internet" },
+                    { q: "Apa bridge?", a: "Segmen connector" },
+                    { q: "Berapa biner 10?", a: "1010" },
+                    { q: "Berapa desimal hexa A?", a: "10" },
+                    { q: "Apa crossover?", a: "Device sama" },
+                    { q: "Apa MAN?", a: "Metropolitan" },
+                    { q: "Apa OSI layer 4?", a: "Transport" },
+                    { q: "Apa modem?", a: "Modulator" },
+                    { q: "Berapa desimal biner 1100?", a: "12" },
+                    { q: "Berapa hexa 12?", a: "C" },
+                    { q: "Apa wire stripper?", a: "Pemotong kulit" },
+                    { q: "Apa WWW?", a: "World Wide Web" },
+                    { q: "Apa OSI layer 2?", a: "Data Link" },
+                    { q: "Apa NIC?", a: "Network card" },
+                    { q: "1011 XOR 0110?", a: "1101" },
+                    { q: "C * 2 hexa?", a: "18" },
+                    { q: "Apa Cat5e?", a: "100Mbps" }
+                ]
+            },
+            { // Level 2: Menengah (Campur 1-6)
+                questions: [
+                    { q: "Tahun ARPANET?", a: "1969" },
+                    { q: "Perbedaan LAN WAN?", a: "Cakupan" },
+                    { q: "Fungsi Physical layer?", a: "Transmisi bit" },
+                    { q: "Fungsi switch?", a: "MAC learning" },
+                    { q: "Biner 5?", a: "101" },
+                    { q: "Hexa 10?", a: "A" },
+                    { q: "Langkah crimping?", a: "Strip, urut, crimp" },
+                    { q: "Dampak negatif jaringan?", a: "Cyber attack" },
+                    { q: "TCP/IP vs OSI?", a: "4 vs 7 layers" },
+                    { q: "Fungsi router?", a: "Routing" },
+                    { q: "Desimal biner 1010?", a: "10" },
+                    { q: "Desimal hexa F?", a: "15" },
+                    { q: "T568A vs B?", a: "Warna berbeda" },
+                    { q: "Sejarah Ethernet?", a: "1973" },
+                    { q: "Data Link fungsi?", a: "Framing" },
+                    { q: "Fungsi repeater?", a: "Amplify" },
+                    { q: "NOT 1111?", a: "0000" },
+                    { q: "A + F hexa?", a: "19" },
+                    { q: "Straight vs crossover?", a: "Pinout" },
+                    { q: "Dampak ekonomi?", a: "E-commerce" },
+                    { q: "Transport layer protocol?", a: "TCP" },
+                    { q: "Fungsi firewall?", a: "Filtering" },
+                    { q: "Biner 15?", a: "1111" },
+                    { q: "Hexa 15?", a: "F" },
+                    { q: "Cat6 bandwidth?", a: "250MHz" },
+                    { q: "Tim Berners-Lee?", a: "WWW" },
+                    { q: "Network layer fungsi?", a: "Routing" },
+                    { q: "Fungsi modem?", a: "Konversi sinyal" },
+                    { q: "1010 OR 1100?", a: "1110" },
+                    { q: "F - A hexa?", a: "5" },
+                    { q: "Patch panel?", a: "Koneksi central" },
+                    { q: "Dampak sosial negatif?", a: "Isolasi" },
+                    { q: "Application layer TCP/IP?", a: "HTTP" },
+                    { q: "Fungsi bridge?", a: "Filter MAC" },
+                    { q: "Desimal biner 1101?", a: "13" },
+                    { q: "Desimal hexa D?", a: "13" },
+                    { q: "Cable tester?", a: "Continuity check" },
+                    { q: "Jenis jaringan wireless?", a: "WLAN" },
+                    { q: "Session layer fungsi?", a: "Dialog" },
+                    { q: "Fungsi NIC?", a: "Media access" },
+                    { q: "1101 XOR 1011?", a: "0110" },
+                    { q: "C * 3 hexa?", a: "24" },
+                    { q: "Fiber optic?", a: "Cahaya" },
+                    { q: "Sejarah Wi-Fi?", a: "1997" },
+                    { q: "Presentation layer?", a: "Encryption" },
+                    { q: "Fungsi AP?", a: "Wireless access" },
+                    { q: "AND operation?", a: "1 jika kedua 1" },
+                    { q: "Hexa addition?", a: "Carry over 16" }
+                ]
+            },
+            { // Level 3: Lanjutan (Campur 1-6)
+                questions: [
+                    { q: "TCP/IP developed by?", a: "DARPA" },
+                    { q: "Topologi star?", a: "Central hub" },
+                    { q: "Encapsulation OSI?", a: "Add header" },
+                    { q: "VLAN in switch?", a: "Broadcast separation" },
+                    { q: "Biner to hexa?", a: "Group 4 bits" },
+                    { q: "Hexa to biner?", a: "4 bits per digit" },
+                    { q: "Fusion splice?", a: "0.05 dB" },
+                    { q: "Dampak lingkungan?", a: "E-waste" },
+                    { q: "OSI vs TCP/IP?", a: "Teori vs praktik" },
+                    { q: "BGP in router?", a: "Exterior routing" },
+                    { q: "Signed biner?", a: "2's complement" },
+                    { q: "Hexa in memory?", a: "Address" },
+                    { q: "TIA-568?", a: "Cabling standard" },
+                    { q: "Ethernet inventor?", a: "Metcalfe" },
+                    { q: "Error detection Data Link?", a: "CRC" },
+                    { q: "3R in repeater?", a: "Regenerate" },
+                    { q: "XOR use?", a: "Parity" },
+                    { q: "Hexa multiplication?", a: "Base 16" },
+                    { q: "NEXT in cable?", a: "Crosstalk" },
+                    { q: "Dampak cybersecurity?", a: "Firewall" },
+                    { q: "Link layer in TCP/IP?", a: "Ethernet" },
+                    { q: "ACL in firewall?", a: "Rules" },
+                    { q: "Floating point biner?", a: "IEEE 754" },
+                    { q: "Hexa in color code?", a: "RGB" },
+                    { q: "OTDR?", a: "Fiber tester" },
+                    { q: "WWW year?", a: "1989" },
+                    { q: "Routing in Network?", a: "Path selection" },
+                    { q: "Optical modem?", a: "ONU" },
+                    { q: "Shift left biner?", a: "Multiply 2" },
+                    { q: "Hexa subtraction?", a: "Borrow 16" },
+                    { q: "Plenum cable?", a: "Fire resistant" },
+                    { q: "Dampak globalisasi?", a: "Connected world" },
+                    { q: "Internet layer protocol?", a: "IP" },
+                    { q: "Source routing bridge?", a: "Token ring" },
+                    { q: "Biner fraction?", a: "After point" },
+                    { q: "Hexa division?", a: "Base 16 divide" },
+                    { q: "Channel test cable?", a: "End to end" },
+                    { q: "Jenis PAN?", a: "Bluetooth" },
+                    { q: "Session primitives?", a: "Request" },
+                    { q: "Wi-Fi standard?", a: "802.11" },
+                    { q: "OR operation?", a: "1 jika salah satu" },
+                    { q: "Hexa in IPv6?", a: "Colon separated" },
+                    { q: "Mechanical splice?", a: "0.3 dB" },
+                    { q: "Sejarah 5G?", a: "2019" },
+                    { q: "Presentation syntax?", a: "ASN.1" },
+                    { q: "AP density?", a: "User per AP" },
+                    { q: "Biner addition carry?", a: "1+1=10" },
+                    { q: "Hexa to octal?", a: "Via biner" }
+                ]
+            },
+            { // Level 4: Master (Campur 1-6)
+                questions: [
+                    { q: "NCP to TCP/IP transition?", a: "1983" },
+                    { q: "Hierarchical topology?", a: "Core-distribution" },
+                    { q: "PDU in OSI?", a: "Layer specific" },
+                    { q: "CEF in multilayer switch?", a: "Fast forwarding" },
+                    { q: "2's complement range?", a: "-2^(n-1) to 2^(n-1)-1" },
+                    { q: "Hexa in assembly?", a: "Machine code" },
+                    { q: "Arc fusion dB?", a: "0.02" },
+                    { q: "Cyber warfare impact?", a: "National security" },
+                    { q: "RFC for TCP/IP?", a: "791 for IP" },
+                    { q: "EIGRP variance?", a: "Load balancing" },
+                    { q: "Biner floating mantissa?", a: "Normalized" },
+                    { q: "Hexa in Unicode?", a: "U+XXXX" },
+                    { q: "Cat8 frequency?", a: "2000MHz" },
+                    { q: "Wi-Fi Alliance?", a: "Certification" },
+                    { q: "HDLC vs PPP?", a: "PPP multi-protocol" },
+                    { q: "Optical amplifier?", a: "EDFA" },
+                    { q: "Biner multiplication?", a: "Shift and add" },
+                    { q: "Hexa bitwise?", a: "AND/OR/XOR" },
+                    { q: "AXT in Cat6a?", a: "Alien Crosstalk" },
+                    { q: "GDPR impact?", a: "Data protection" },
+                    { q: "IPv6 in Internet layer?", a: "128 bits" },
+                    { q: "Transparent bridge learning?", a: "MAC table" },
+                    { q: "Biner division algorithm?", a: "Restoring" },
+                    { q: "Hexa in MAC address?", a: "48 bits" },
+                    { q: "Tier 2 certification?", a: "OTDR" },
+                    { q: "IoT network type?", a: "LPWAN" },
+                    { q: "Checkpointing in Session?", a: "Synchronization" },
+                    { q: "802.11ax?", a: "Wi-Fi 6" },
+                    { q: "Biner Booth algorithm?", a: "Multiplication" },
+                    { q: "Hexa modular arithmetic?", a: "Crypto" },
+                    { q: "Delay skew limit?", a: "50ns" },
+                    { q: "Digital divide impact?", a: "Inequality" },
+                    { q: "ICMP type?", a: "Echo request" },
+                    { q: "SRB in token ring?", a: "Source Route Bridge" },
+                    { q: "IEEE 754 bias?", a: "127 for single" },
+                    { q: "Hexa in color #FF0000?", a: "Red" },
+                    { q: "Permanent link length?", a: "90m" },
+                    { q: "BAN in wearables?", a: "Body network" },
+                    { q: "ASN.1 in Presentation?", a: "Abstract Syntax" },
+                    { q: "Wi-Fi 7 features?", a: "320MHz" },
+                    { q: "Biner Karnaugh map?", a: "Simplification" },
+                    { q: "Hexa in IPv4?", a: "Dotted decimal" },
+                    { q: "V-groove alignment?", a: "Mechanical splice" },
+                    { q: "5G impact?", a: "IoT massive" },
+                    { q: "BER in Presentation?", a: "Basic Encoding Rules" },
+                    { q: "AP controller?", a: "WLC" },
+                    { q: "Biner Gray code?", a: "Single bit change" },
+                    { q: "Hexa in ASCII?", a: "7 bit to hexa" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "EFISIENSI TRANSMISI") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Efisiensi Transmisi.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Rangkuman sejarah, OSI, perangkat, biner, hexa, pengabelan dasar.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Dampak, fungsi layer, konversi, langkah crimping.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Protokol, operasi, testers, standards.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Advanced protocols, algorithms, certifications.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
