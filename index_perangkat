@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Perangkat Jaringan Komputer</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Perangkat Jaringan dan Penentuan Kebutuhan</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa perangkat untuk menghubungkan LAN berbeda?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu hub?", a: "Penghubung dasar" },
+                    { q: "Apa itu switch?", a: "Penghubung pintar" },
+                    { q: "Apa itu router?", a: "Pengarah lalu lintas" },
+                    { q: "Apa itu modem?", a: "Modulator demodulator" },
+                    { q: "Apa itu repeater?", a: "Penguat sinyal" },
+                    { q: "Apa itu bridge?", a: "Penghubung segmen" },
+                    { q: "Apa itu firewall?", a: "Pelindung jaringan" },
+                    { q: "Apa itu access point?", a: "Titik akses wireless" },
+                    { q: "Apa itu NIC?", a: "Network Interface Card" },
+                    { q: "Apa itu server?", a: "Penyedia layanan" },
+                    { q: "Bagaimana tentukan hub?", a: "Untuk jaringan kecil" },
+                    { q: "Bagaimana tentukan switch?", a: "Untuk efisiensi" },
+                    { q: "Bagaimana tentukan router?", a: "Untuk internet" },
+                    { q: "Bagaimana tentukan modem?", a: "Untuk ISP" },
+                    { q: "Bagaimana tentukan repeater?", a: "Untuk jarak jauh" },
+                    { q: "Bagaimana tentukan bridge?", a: "Untuk segmen LAN" },
+                    { q: "Bagaimana tentukan firewall?", a: "Untuk keamanan" },
+                    { q: "Bagaimana tentukan AP?", a: "Untuk wireless" },
+                    { q: "Bagaimana tentukan NIC?", a: "Untuk koneksi" },
+                    { q: "Bagaimana tentukan server?", a: "Untuk data pusat" },
+                    { q: "Apa gateway?", a: "Penghubung jaringan berbeda" },
+                    { q: "Apa proxy?", a: "Perantara" },
+                    { q: "Apa load balancer?", a: "Pembagi beban" },
+                    { q: "Apa VPN concentrator?", a: "Pengelola VPN" },
+                    { q: "Apa IDS?", a: "Intrusion Detection System" },
+                    { q: "Apa IPS?", a: "Intrusion Prevention System" },
+                    { q: "Apa UTM?", a: "Unified Threat Management" },
+                    { q: "Apa NAS?", a: "Network Attached Storage" },
+                    { q: "Apa SAN?", a: "Storage Area Network" },
+                    { q: "Apa WLC?", a: "Wireless LAN Controller" },
+                    { q: "Bagaimana tentukan gateway?", a: "Untuk protocol berbeda" },
+                    { q: "Bagaimana tentukan proxy?", a: "Untuk filtering" },
+                    { q: "Bagaimana tentukan load balancer?", a: "Untuk server banyak" },
+                    { q: "Bagaimana tentukan VPN?", a: "Untuk akses remote" },
+                    { q: "Bagaimana tentukan IDS?", a: "Untuk monitoring" },
+                    { q: "Bagaimana tentukan IPS?", a: "Untuk blocking" },
+                    { q: "Bagaimana tentukan UTM?", a: "All-in-one security" },
+                    { q: "Bagaimana tentukan NAS?", a: "Untuk file sharing" },
+                    { q: "Bagaimana tentukan SAN?", a: "Untuk storage block" },
+                    { q: "Bagaimana tentukan WLC?", a: "Untuk AP multiple" },
+                    { q: "Apa PoE switch?", a: "Power over Ethernet" },
+                    { q: "Apa multilayer switch?", a: "Layer 3 switch" },
+                    { q: "Apa content switch?", a: "Application switch" },
+                    { q: "Apa SDN controller?", a: "Software Defined Networking" },
+                    { q: "Apa NFV?", a: "Network Function Virtualization" },
+                    { q: "Apa edge router?", a: "Router perimeter" },
+                    { q: "Apa core router?", a: "Router pusat" },
+                    { q: "Apa wireless router?", a: "Router + AP" },
+                    { q: "Apa smart hub?", a: "IoT hub" },
+                    { q: "Apa mesh router?", a: "Sistem mesh" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa fungsi hub?", a: "Broadcast sinyal" },
+                    { q: "Apa fungsi switch?", a: "MAC learning" },
+                    { q: "Apa fungsi router?", a: "Routing IP" },
+                    { q: "Apa fungsi modem?", a: "Konversi sinyal" },
+                    { q: "Apa fungsi repeater?", a: "Amplify sinyal" },
+                    { q: "Apa fungsi bridge?", a: "Filter MAC" },
+                    { q: "Apa fungsi firewall?", a: "Packet filtering" },
+                    { q: "Apa fungsi AP?", a: "Wireless access" },
+                    { q: "Apa fungsi NIC?", a: "Media access" },
+                    { q: "Apa fungsi server?", a: "Resource sharing" },
+                    { q: "Bagaimana tentukan jumlah hub?", a: "Berdasarkan port" },
+                    { q: "Bagaimana tentukan switch?", a: "Berdasarkan traffic" },
+                    { q: "Bagaimana tentukan router?", a: "Berdasarkan WAN" },
+                    { q: "Bagaimana tentukan modem?", a: "Berdasarkan ISP type" },
+                    { q: "Bagaimana tentukan repeater?", a: "Berdasarkan jarak" },
+                    { q: "Bagaimana tentukan bridge?", a: "Berdasarkan segmen" },
+                    { q: "Bagaimana tentukan firewall?", a: "Berdasarkan threat" },
+                    { q: "Bagaimana tentukan AP?", a: "Berdasarkan coverage" },
+                    { q: "Bagaimana tentukan NIC?", a: "Berdasarkan speed" },
+                    { q: "Bagaimana tentukan server?", a: "Berdasarkan load" },
+                    { q: "Apa fungsi gateway?", a: "Protocol conversion" },
+                    { q: "Apa fungsi proxy?", a: "Caching" },
+                    { q: "Apa fungsi load balancer?", a: "Distribusi traffic" },
+                    { q: "Apa fungsi VPN concentrator?", a: "Terminate VPN tunnels" },
+                    { q: "Apa fungsi IDS?", a: "Detect anomalies" },
+                    { q: "Apa fungsi IPS?", a: "Block attacks" },
+                    { q: "Apa fungsi UTM?", a: "Multi-security functions" },
+                    { q: "Apa fungsi NAS?", a: "File-level storage" },
+                    { q: "Apa fungsi SAN?", a: "Block-level storage" },
+                    { q: "Apa fungsi WLC?", a: "Manage APs" },
+                    { q: "Bagaimana tentukan gateway?", a: "Untuk legacy systems" },
+                    { q: "Bagaimana tentukan proxy?", a: "Untuk web access" },
+                    { q: "Bagaimana tentukan load balancer?", a: "Untuk high availability" },
+                    { q: "Bagaimana tentukan VPN?", a: "Untuk security remote" },
+                    { q: "Bagaimana tentukan IDS?", a: "Untuk logging" },
+                    { q: "Bagaimana tentukan IPS?", a: "Untuk inline protection" },
+                    { q: "Bagaimana tentukan UTM?", a: "Untuk SME" },
+                    { q: "Bagaimana tentukan NAS?", a: "Untuk home/office" },
+                    { q: "Bagaimana tentukan SAN?", a: "Untuk enterprise" },
+                    { q: "Bagaimana tentukan WLC?", a: "Untuk large wireless" },
+                    { q: "Apa PoE standard?", a: "802.3af/at" },
+                    { q: "Apa multilayer switch fungsi?", a: "Routing internal" },
+                    { q: "Apa content switch?", a: "Layer 7 switching" },
+                    { q: "Apa SDN controller fungsi?", a: "Central control" },
+                    { q: "Apa NFV fungsi?", a: "Virtual appliances" },
+                    { q: "Apa edge router fungsi?", a: "Boundary protection" },
+                    { q: "Apa core router fungsi?", a: "High-speed backbone" },
+                    { q: "Apa wireless router fungsi?", a: "All-in-one home" },
+                    { q: "Apa smart hub fungsi?", a: "IoT control" },
+                    { q: "Apa mesh router fungsi?", a: "Whole-home Wi-Fi" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa collision domain di hub?", a: "All ports" },
+                    { q: "Apa VLAN di switch?", a: "Broadcast domain separation" },
+                    { q: "Apa OSPF di router?", a: "Link-state routing" },
+                    { q: "Apa DSL modem?", a: "Digital Subscriber Line" },
+                    { q: "Apa repeater limit?", a: "5-4-3 rule" },
+                    { q: "Apa spanning tree in bridge?", a: "Loop prevention" },
+                    { q: "Apa ACL in firewall?", a: "Access Control List" },
+                    { q: "Apa SSID in AP?", a: "Service Set Identifier" },
+                    { q: "Apa PCIe NIC?", a: "High-speed card" },
+                    { q: "Apa RAID in server?", a: "Redundant Array" },
+                    { q: "Bagaimana hitung port switch?", a: "Jumlah device + margin" },
+                    { q: "Bagaimana spek router?", a: "Throughput, interfaces" },
+                    { q: "Bagaimana modem compatibility?", a: "DOCSIS for cable" },
+                    { q: "Bagaimana repeater placement?", a: "Midway cable" },
+                    { q: "Bagaimana bridge for?", a: "Extend LAN" },
+                    { q: "Bagaimana firewall type?", a: "Stateful vs stateless" },
+                    { q: "Bagaimana AP density?", a: "User count per AP" },
+                    { q: "Bagaimana NIC duplex?", a: "Full/half" },
+                    { q: "Bagaimana server specs?", a: "CPU, RAM, storage" },
+                    { q: "Apa default gateway?", a: "Router IP" },
+                    { q: "Apa reverse proxy?", a: "Load balancing" },
+                    { q: "Apa virtual load balancer?", a: "Software-based" },
+                    { q: "Apa IPsec VPN?", a: "Secure tunnel" },
+                    { q: "Apa signature-based IDS?", a: "Pattern matching" },
+                    { q: "Apa anomaly-based IPS?", a: "Behavior analysis" },
+                    { q: "Apa UTM components?", a: "AV, firewall, VPN" },
+                    { q: "Apa NAS protocols?", a: "NFS, SMB" },
+                    { q: "Apa SAN protocols?", a: "iSCSI, Fibre Channel" },
+                    { q: "Apa WLC features?", a: "Roaming, security" },
+                    { q: "Bagaimana tentukan PoE?", a: "Power budget" },
+                    { q: "Bagaimana multilayer routing?", a: "IP switching" },
+                    { q: "Apa content switch policy?", a: "URL-based" },
+                    { q: "Apa SDN separation?", a: "Control/data plane" },
+                    { q: "Apa NFV orchestration?", a: "MANO" },
+                    { q: "Apa edge computing?", a: "Low latency" },
+                    { q: "Apa core bandwidth?", a: "Tbps" },
+                    { q: "Apa wireless security?", a: "WPA3" },
+                    { q: "Apa Z-Wave in smart hub?", a: "Low-power" },
+                    { q: "Apa Wi-Fi 6 in mesh?", a: "MU-MIMO" },
+                    { q: "Apa SFP in switch?", a: "Fiber module" },
+                    { q: "Apa stacking switch?", a: "Virtual chassis" },
+                    { q: "Apa DPI in firewall?", a: "Deep Packet Inspection" },
+                    { q: "Apa NGFW?", a: "Next-Gen Firewall" },
+                    { q: "Apa SD-WAN?", a: "Software-Defined WAN" },
+                    { q: "Apa zero-touch provisioning?", a: "Auto config" },
+                    { q: "Apa intent-based networking?", a: "Policy-driven" },
+                    { q: "Apa AI in network management?", a: "Predictive analytics" },
+                    { q: "Apa 5G edge devices?", a: "MEC" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa CSMA/CD in hub?", a: "Collision detection" },
+                    { q: "Apa STP in switch?", a: "Spanning Tree Protocol" },
+                    { q: "Apa NAT in router?", a: "Network Address Translation" },
+                    { q: "Apa ADSL vs VDSL?", a: "Asymmetric vs Very high" },
+                    { q: "Apa regenerator vs repeater?", a: "Clean signal" },
+                    { q: "Apa transparent bridge?", a: "Learning bridge" },
+                    { q: "Apa NGFW features?", a: "App awareness" },
+                    { q: "Apa MU-MIMO in AP?", a: "Multi-user" },
+                    { q: "Apa 10GBASE-T NIC?", a: "10Gbps copper" },
+                    { q: "Apa virtualization in server?", a: "VMware" },
+                    { q: "Bagaimana PoE power calculation?", a: "Watts per port" },
+                    { q: "Apa MLS in multilayer?", a: "Multi-Layer Switching" },
+                    { q: "Apa SLB in content switch?", a: "Server Load Balancing" },
+                    { q: "Apa OpenFlow in SDN?", a: "Protocol" },
+                    { q: "Apa VNF in NFV?", a: "Virtual Network Function" },
+                    { q: "Apa MEC in edge?", a: "Multi-access Edge Computing" },
+                    { q: "Apa OSPF areas in core?", a: "Backbone area 0" },
+                    { q: "Apa WPA3 enhancements?", a: "SAE" },
+                    { q: "Apa Zigbee in smart hub?", a: "Mesh low-power" },
+                    { q: "Apa OFDMA in Wi-Fi 6?", a: "Orthogonal Frequency Division" },
+                    { q: "Apa QSFP in switch?", a: "40G/100G module" },
+                    { q: "Apa VSS in stacking?", a: "Virtual Switching System" },
+                    { q: "Apa SSL inspection in firewall?", a: "Decrypt check" },
+                    { q: "Apa sandboxing in NGFW?", a: "Threat isolation" },
+                    { q: "Apa MPLS in SD-WAN?", a: "Underlay" },
+                    { q: "Apa ZTP protocol?", a: "NETCONF" },
+                    { q: "Apa IBN components?", a: "Assurance, translation" },
+                    { q: "Apa AIOps in network?", a: "AI Operations" },
+                    { q: "Apa mmWave in 5G?", a: "High frequency" },
+                    { q: "Apa hub collision rate?", a: "High in busy network" },
+                    { q: "Apa switch forwarding rate?", a: "Wire speed" },
+                    { q: "Apa router BGP attributes?", a: "Weight, local pref" },
+                    { q: "Apa cable modem CMTS?", a: "Cable Modem Termination System" },
+                    { q: "Apa optical repeater?", a: "3R regeneration" },
+                    { q: "Apa source-routing bridge?", a: "Token ring" },
+                    { q: "Apa zero-trust firewall?", a: "Microsegmentation" },
+                    { q: "Apa beamforming in AP?", a: "Directed signal" },
+                    { q: "Apa Wi-Fi 7 features?", a: "320MHz channels" },
+                    { q: "Apa blade server?", a: "Modular" },
+                    { q: "Apa PoE++ standard?", a: "802.3bt" },
+                    { q: "Apa CEF in multilayer?", a: "Cisco Express Forwarding" },
+                    { q: "Apa GSLB?", a: "Global Server Load Balancing" },
+                    { q: "Apa ONOS SDN controller?", a: "Open source" },
+                    { q: "Apa ETSI NFV?", a: "Standard body" },
+                    { q: "Apa 5G NR?", a: "New Radio" },
+                    { q: "Apa IS-IS in core?", a: "Link-state IGP" },
+                    { q: "Apa OWE in WPA3?", a: "Opportunistic Wireless Encryption" },
+                    { q: "Apa Thread protocol?", a: "IPv6 mesh" },
+                    { q: "Apa 1024-QAM in Wi-Fi 6?", a: "Higher data rate" }
+                ]
+            }
+        ];
+        // Script sama, ganti advanced answer ke "Router"
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "ROUTER") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Router.</div>';
+            }
+        }
+        // Remedial for this topic
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Hub untuk broadcast, switch untuk MAC, router untuk IP.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Tentukan berdasarkan traffic, security, coverage.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: PoE, VLAN, ACL, MU-MIMO.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: SDN, NFV, ZTP, AIOps.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script as in example
+    </script>
+</body>
+</html>
