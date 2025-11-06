@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaringan Komputer Kuis</title>
+    <title>Personalized Learning Simulator - Sejarah dan Jenis Jaringan Komputer</title>
     <style>
         body { font-family: Arial; margin: 20px; }
         .hidden { display: none; }
@@ -11,222 +11,338 @@
         .correct { background: #d4edda; }
         .incorrect { background: #f8d7da; }
         .level-indicator { font-weight: bold; color: #2c3e50; }
-        select, button { margin: 5px; padding: 5px; }
     </style>
 </head>
 <body>
     <div id="intro" class="module">
-        <h2>Pengantar Kuis Jaringan Komputer</h2>
-        <p>Pilih tingkat kesulitan: 
-            <select id="level" onchange="setLevel()">
-                <option value="mudah">Mudah (20 soal)</option>
-                <option value="sedang">Sedang (20 soal)</option>
-                <option value="sulit">Sulit (10 soal)</option>
-            </select>
-        </p>
+        <h2>Sejarah, Jenis, dan Dampak Jaringan Komputer</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
         <button onclick="startQuiz()">Mulai Kuis</button>
     </div>
     <div id="quiz" class="module hidden">
-        <h2>Kuis Jaringan Komputer</h2>
+        <h2>Kuis Pembelajaran</h2>
         <div id="question"></div>
-        <div id="options"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
         <button onclick="checkAnswer()">Submit</button>
         <div id="feedback"></div>
-        <p>Skor: <span id="score">0</span>/<span id="total"></span> | Tingkat: <span id="currentLevel"></span></p>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
     </div>
     <div id="remedial" class="module hidden">
-        <h2>Refleksi dan Remedial</h2>
+        <h2>Remedial</h2>
         <div id="remedialContent"></div>
         <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa dampak utama ARPANET terhadap perkembangan jaringan modern?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
     </div>
     <div id="certificate" class="module hidden">
         <h2>Sertifikat</h2>
         <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
     </div>
-
     <script>
-        let currentQ = 0, score = 0, selectedQuestions = [], currentLevel = "mudah";
-        const levels = {
-            mudah: {
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
                 questions: [
-                    { q: "Siapa tokoh yang terkait dengan pengembangan ARPANET pada tahun 1960-an?", options: ["a) Berners-Lee", "b) Leonard Kleinrock", "c) Paul Mockapetris", "d) Ray Tomlinson"], a: "b" },
-                    { q: "Pada dekade berapa World Wide Web dikembangkan?", options: ["a) 1970-an", "b) 1980-an", "c) 1990-an", "d) 2000-an"], a: "c" },
-                    { q: "Siapa yang menciptakan World Wide Web?", options: ["a) Charles Babbage", "b) Berners-Lee", "c) Ray Tomlinson", "d) Leonard Kleinrock"], a: "b" },
-                    { q: "Jaringan apa yang mencakup area geografis kecil seperti kantor?", options: ["a) WAN", "b) MAN", "c) LAN", "d) PAN"], a: "c" },
-                    { q: "Apa kepanjangan dari LAN?", options: ["a) Local Access Network", "b) Local Area Network", "c) Large Area Network", "d) Linked Area Network"], a: "b" },
-                    { q: "Jaringan apa yang menghubungkan perangkat di area kota?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "b" },
-                    { q: "Apa kepanjangan dari PAN?", options: ["a) Personal Area Network", "b) Private Access Network", "c) Public Area Network", "d) Personal Access Node"], a: "a" },
-                    { q: "Jaringan apa yang menggunakan kabel untuk konektivitas?", options: ["a) Jaringan Nirkabel", "b) Jaringan Kabel", "c) Jaringan Client-Server", "d) Jaringan Peer-to-Peer"], a: "b" },
-                    { q: "Jaringan apa yang memungkinkan komunikasi langsung antar perangkat tanpa server pusat?", options: ["a) Jaringan Client-Server", "b) Jaringan Peer-to-Peer", "c) Jaringan Full Duplex", "d) Jaringan Simplex"], a: "b" },
-                    { q: "Mode transmisi apa yang memungkinkan data mengalir dua arah secara bersamaan?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Single Duplex"], a: "c" },
-                    { q: "Apa salah satu dampak jaringan komputer terhadap kebudayaan manusia?", options: ["a) Mengurangi komunikasi", "b) Membatasi akses informasi", "c) Meningkatkan interaksi sosial", "d) Mengurangi peluang bisnis"], a: "c" },
-                    { q: "Siapa yang terkait dengan pengembangan email pada tahun 1970-an?", options: ["a) Leonard Kleinrock", "b) Ray Tomlinson", "c) Paul Mockapetris", "d) Berners-Lee"], a: "b" },
-                    { q: "Pada dekade berapa media sosial mulai menghubungkan dunia?", options: ["a) 1980-an", "b) 1990-an", "c) 2000-an", "d) 2010-an"], a: "c" },
-                    { q: "Mode transmisi apa yang hanya memungkinkan data mengalir satu arah?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
-                    { q: "Jaringan apa yang cocok untuk perangkat IoT?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
-                    { q: "Apa dampak jaringan komputer terhadap pendidikan?", options: ["a) Mengurangi akses informasi", "b) Meningkatkan akses informasi", "c) Membatasi interaksi sosial", "d) Mengurangi hiburan"], a: "b" },
-                    { q: "Jaringan apa yang menggunakan teknologi Wi-Fi?", options: ["a) Jaringan Kabel", "b) Jaringan Nirkabel", "c) Jaringan Client-Server", "d) Jaringan Simplex"], a: "b" },
-                    { q: "Siapa yang terkait dengan alamat yang mudah diingat pada tahun 1980-an?", options: ["a) Charles Babbage", "b) Paul Mockapetris", "c) Berners-Lee", "d) Ray Tomlinson"], a: "b" },
-                    { q: "Jaringan apa yang bergantung pada server pusat untuk komunikasi?", options: ["a) Jaringan Peer-to-Peer", "b) Jaringan Client-Server", "c) Jaringan Nirkabel", "d) Jaringan Simplex"], a: "b" },
-                    { q: "Apa dampak jaringan komputer terhadap politik?", options: ["a) Mengurangi aktivisme", "b) Meningkatkan aktivisme", "c) Membatasi komunikasi", "d) Mengurangi hiburan"], a: "b" }
+                    { q: "Apa itu jaringan komputer?", a: "Kumpulan komputer yang terhubung" },
+                    { q: "Siapa penemu ARPANET?", a: "Departemen Pertahanan AS" },
+                    { q: "Tahun berapa ARPANET dibuat?", a: "1969" },
+                    { q: "Apa singkatan dari LAN?", a: "Local Area Network" },
+                    { q: "Apa singkatan dari WAN?", a: "Wide Area Network" },
+                    { q: "Apa dampak jaringan pada komunikasi?", a: "Mempercepat pertukaran informasi" },
+                    { q: "Apa jenis jaringan untuk rumah?", a: "LAN" },
+                    { q: "Siapa pencipta World Wide Web?", a: "Tim Berners-Lee" },
+                    { q: "Tahun berapa WWW dibuat?", a: "1989" },
+                    { q: "Apa dampak jaringan pada bisnis?", a: "Meningkatkan efisiensi" },
+                    { q: "Apa jenis jaringan nirkabel?", a: "WLAN" },
+                    { q: "Apa dampak negatif jaringan?", a: "Serangan siber" },
+                    { q: "Apa MAN?", a: "Metropolitan Area Network" },
+                    { q: "Tahun berapa internet komersial?", a: "1990an" },
+                    { q: "Apa dampak pada pendidikan?", a: "Akses informasi luas" },
+                    { q: "Apa PAN?", a: "Personal Area Network" },
+                    { q: "Siapa pengembang TCP/IP?", a: "Vint Cerf dan Bob Kahn" },
+                    { q: "Tahun berapa TCP/IP?", a: "1974" },
+                    { q: "Apa dampak pada sosial?", a: "Koneksi global" },
+                    { q: "Apa jenis jaringan bus?", a: "Topologi bus" },
+                    { q: "Apa dampak pada ekonomi?", a: "E-commerce" },
+                    { q: "Apa star network?", a: "Topologi bintang" },
+                    { q: "Tahun berapa email pertama?", a: "1971" },
+                    { q: "Apa dampak pada kesehatan?", a: "Telemedicine" },
+                    { q: "Apa ring network?", a: "Topologi cincin" },
+                    { q: "Apa dampak pada lingkungan?", a: "Pengurangan kertas" },
+                    { q: "Apa mesh network?", a: "Topologi mesh" },
+                    { q: "Tahun berapa smartphone?", a: "2000an" },
+                    { q: "Apa dampak pada hiburan?", a: "Streaming" },
+                    { q: "Apa hybrid network?", a: "Campuran topologi" },
+                    { q: "Apa dampak pada privasi?", a: "Risiko data bocor" },
+                    { q: "Tahun berapa 5G?", a: "2019" },
+                    { q: "Apa dampak pada pekerjaan?", a: "Remote work" },
+                    { q: "Apa client-server?", a: "Model jaringan" },
+                    { q: "Apa P2P?", a: "Peer-to-peer" },
+                    { q: "Apa dampak pada budaya?", a: "Globalisasi" },
+                    { q: "Tahun berapa IoT?", a: "2010an" },
+                    { q: "Apa dampak pada keamanan?", a: "Firewall dibutuhkan" },
+                    { q: "Apa cloud computing?", a: "Jaringan berbasis awan" },
+                    { q: "Apa dampak pada inovasi?", a: "Kolaborasi cepat" },
+                    { q: "Tahun berapa blockchain?", a: "2008" },
+                    { q: "Apa dampak pada politik?", a: "Sosial media" },
+                    { q: "Apa SDN?", a: "Software-Defined Networking" },
+                    { q: "Apa dampak pada lingkungan?", a: "Energi efisien" },
+                    { q: "Tahun berapa AI in networks?", a: "2020an" },
+                    { q: "Apa dampak pada transportasi?", a: "Smart cities" },
+                    { q: "Apa VPN?", a: "Virtual Private Network" },
+                    { q: "Apa dampak pada pertanian?", a: "IoT farming" },
+                    { q: "Tahun berapa 6G?", a: "2030an" },
+                    { q: "Apa dampak pada manufaktur?", a: "Industry 4.0" }
                 ]
             },
-            sedang: {
+            { // Level 2: Menengah
                 questions: [
-                    { q: "Jaringan apa yang mencakup area geografis luas seperti negara?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" },
-                    { q: "Apa perkembangan utama jaringan komputer pada tahun 1960-an?", options: ["a) World Wide Web", "b) ARPANET", "c) Media Sosial", "d) IoT"], a: "b" },
-                    { q: "Jaringan apa yang paling cocok untuk menghubungkan perangkat dalam satu gedung?", options: ["a) WAN", "b) MAN", "c) LAN", "d) PAN"], a: "c" },
-                    { q: "Apa ciri utama mode transmisi Half Duplex?", options: ["a) Data mengalir satu arah saja", "b) Data mengalir dua arah, tetapi tidak bersamaan", "c) Data mengalir dua arah secara bersamaan", "d) Tidak ada aliran data"], a: "b" },
-                    { q: "Apa salah satu bidang yang dipengaruhi oleh jaringan komputer?", options: ["a) Pertanian", "b) Ekonomi dan bisnis", "c) Astronomi", "d) Geologi"], a: "b" },
-                    { q: "Jaringan apa yang biasanya digunakan untuk perangkat pribadi seperti ponsel dan jam tangan pintar?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
-                    { q: "Apa yang dikembangkan oleh Paul Mockapetris pada tahun 1980-an?", options: ["a) Email", "b) Sistem nama domain", "c) World Wide Web", "d) IoT"], a: "b" },
-                    { q: "Mode transmisi apa yang digunakan pada sistem televisi?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
-                    { q: "Apa dampak jaringan komputer terhadap hiburan?", options: ["a) Mengurangi pilihan hiburan", "b) Meningkatkan pilihan hiburan", "c) Membatasi akses informasi", "d) Mengurangi interaksi sosial"], a: "b" },
-                    { q: "Jaringan apa yang memungkinkan komunikasi tanpa server pusat?", options: ["a) Jaringan Client-Server", "b) Jaringan Peer-to-Peer", "c) Jaringan Full Duplex", "d) Jaringan Simplex"], a: "b" },
-                    { q: "Apa teknologi yang sering digunakan pada jaringan nirkabel?", options: ["a) Kabel Ethernet", "b) Wi-Fi", "c) Kabel serat optik", "d) Kabel koaksial"], a: "b" },
-                    { q: "Apa yang dimaksud dengan IoT dalam konteks jaringan komputer?", options: ["a) Internet of Technology", "b) Internet of Things", "c) Integration of Technology", "d) Internet of Transmission"], a: "b" },
-                    { q: "Jaringan apa yang menghubungkan beberapa kota?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" },
-                    { q: "Mode transmisi apa yang memungkinkan komunikasi telepon?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Single Duplex"], a: "c" },
-                    { q: "Apa dampak jaringan komputer terhadap komunikasi?", options: ["a) Mengurangi interaksi sosial", "b) Meningkatkan interaksi sosial", "c) Membatasi akses informasi", "d) Mengurangi aktivisme"], a: "b" },
-                    { q: "Siapa yang terkait dengan pengembangan komputer pribadi?", options: ["a) Leonard Kleinrock", "b) Ray Tomlinson", "c) Charles Babbage", "d) Paul Mockapetris"], a: "c" },
-                    { q: "Jaringan apa yang menggunakan Bluetooth untuk konektivitas?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
-                    { q: "Apa yang terjadi pada tahun 2000-an dalam sejarah jaringan komputer?", options: ["a) Pengembangan ARPANET", "b) Munculnya World Wide Web", "c) Menghubungkan dunia dengan media sosial", "d) Pengembangan komputer pribadi"], a: "c" },
-                    { q: "Mode transmisi apa yang cocok untuk radio?", options: ["a) Full Duplex", "b) Half Duplex", "c) Simplex", "d) Dual Duplex"], a: "c" },
-                    { q: "Apa salah satu manfaat jaringan komputer untuk bisnis?", options: ["a) Mengurangi efisiensi", "b) Meningkatkan efisiensi", "c) Membatasi komunikasi", "d) Mengurangi inovasi"], a: "b" }
+                    { q: "Apa tujuan ARPANET?", a: "Pertahanan militer" },
+                    { q: "Siapa pencipta Ethernet?", a: "Robert Metcalfe" },
+                    { q: "Tahun berapa Ethernet?", a: "1973" },
+                    { q: "Apa perbedaan LAN dan WAN?", a: "Cakupan wilayah" },
+                    { q: "Apa dampak jaringan pada globalisasi?", a: "Koneksi dunia" },
+                    { q: "Apa jenis jaringan untuk kota?", a: "MAN" },
+                    { q: "Siapa pengembang HTTP?", a: "Tim Berners-Lee" },
+                    { q: "Tahun berapa HTTP?", a: "1991" },
+                    { q: "Apa dampak pada lingkungan?", a: "Pencemaran elektronik" },
+                    { q: "Apa WLAN?", a: "Wireless LAN" },
+                    { q: "Apa dampak negatif sosial?", a: "Cyberbullying" },
+                    { q: "Apa CAN?", a: "Campus Area Network" },
+                    { q: "Tahun berapa mobile internet?", a: "2000an" },
+                    { q: "Apa dampak pada kesehatan mental?", a: "Kecanduan online" },
+                    { q: "Apa SAN?", a: "Storage Area Network" },
+                    { q: "Siapa pencipta Bitcoin?", a: "Satoshi Nakamoto" },
+                    { q: "Tahun berapa Bitcoin?", a: "2009" },
+                    { q: "Apa dampak pada keuangan?", a: "Fintech" },
+                    { q: "Apa tree topology?", a: "Topologi pohon" },
+                    { q: "Apa dampak pada hak asasi manusia?", a: "Kebebasan berpendapat" },
+                    { q: "Apa fully connected mesh?", a: "Mesh penuh" },
+                    { q: "Tahun berapa social media?", a: "2000an" },
+                    { q: "Apa dampak pada demokrasi?", a: "Pemilu online" },
+                    { q: "Apa peer-to-peer model?", a: "Model P2P" },
+                    { q: "Apa dampak pada privasi data?", a: "GDPR" },
+                    { q: "Tahun berapa GDPR?", a: "2018" },
+                    { q: "Apa dampak pada pendidikan online?", a: "MOOCs" },
+                    { q: "Apa client-server model?", a: "Model klien-server" },
+                    { q: "Apa dampak pada pekerjaan remote?", a: "Zoom" },
+                    { q: "Tahun berapa Zoom populer?", a: "2020" },
+                    { q: "Apa dampak pada lingkungan positif?", a: "Pengurangan perjalanan" },
+                    { q: "Apa 5G benefits?", a: "Kecepatan tinggi" },
+                    { q: "Apa dampak pada otomatisasi?", a: "AI integration" },
+                    { q: "Apa SDN benefits?", a: "Manajemen sentral" },
+                    { q: "Apa dampak pada seni?", a: "Digital art" },
+                    { q: "Tahun berapa NFT?", a: "2021" },
+                    { q: "Apa dampak pada olahraga?", a: "Streaming live" },
+                    { q: "Apa edge computing?", a: "Komputasi tepi" },
+                    { q: "Apa dampak pada medis?", a: "E-health" },
+                    { q: "Tahun berapa telehealth boom?", a: "2020" },
+                    { q: "Apa dampak pada transportasi?", a: "Autonomous vehicles" },
+                    { q: "Apa blockchain in networks?", a: "Keamanan data" },
+                    { q: "Apa dampak pada supply chain?", a: "Tracking real-time" },
+                    { q: "Apa quantum networks?", a: "Jaringan kuantum" },
+                    { q: "Apa dampak pada keamanan nasional?", a: "Cyber warfare" },
+                    { q: "Apa AI ethics in networks?", a: "Bias reduction" },
+                    { q: "Apa dampak pada inklusi digital?", a: "Bridging divide" },
+                    { q: "Apa green networking?", a: "Energi efisien" },
+                    { q: "Apa dampak pada budaya pop?", a: "Meme culture" }
                 ]
             },
-            sulit: {
+            { // Level 3: Lanjutan
                 questions: [
-                    { q: "Tokoh mana yang salah dikaitkan dengan kontribusi dalam dokumen?", options: ["a) Leonard Kleinrock - ARPANET", "b) Ray Tomlinson - Email", "c) Charles Babbage - Alamat yang mudah diingat", "d) Berners-Lee - World Wide Web"], a: "c" },
-                    { q: "Apa perbedaan utama antara jaringan Client-Server dan Peer-to-Peer?", options: ["a) Client-Server menggunakan teknologi nirkabel, P2P menggunakan kabel", "b) Client-Server bergantung pada server pusat, P2P memungkinkan komunikasi langsung antar perangkat", "c) Client-Server bersifat simplex, P2P bersifat full duplex", "d) Client-Server terbatas pada area kecil, P2P mencakup area luas"], a: "b" },
-                    { q: "Mode transmisi apa yang paling cocok untuk sistem walkie-talkie?", options: ["a) Simplex", "b) Half Duplex", "c) Full Duplex", "d) Dual Duplex"], a: "b" },
-                    { q: "Mana yang BUKAN dampak langsung jaringan komputer terhadap kebudayaan manusia?", options: ["a) Meningkatkan komunikasi", "b) Meningkatkan akses pendidikan", "c) Meningkatkan tenaga kerja manual", "d) Meningkatkan pilihan hiburan"], a: "c" },
-                    { q: "Apa signifikansi kontribusi Paul Mockapetris pada tahun 1980-an?", options: ["a) Pengembangan email", "b) Penciptaan sistem nama domain", "c) Penemuan World Wide Web", "d) Pembentukan IoT"], a: "b" },
-                    { q: "Jaringan apa yang paling mungkin menggunakan teknologi Bluetooth?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "d" },
-                    { q: "Apa dampak IoT dalam konteks jaringan komputer?", options: ["a) Mengurangi konektivitas perangkat", "b) Menghubungkan semua perangkat untuk otomatisasi", "c) Mengurangi akses internet", "d) Menghapus platform media sosial"], a: "b" },
-                    { q: "Kombinasi jenis jaringan dan teknologi mana yang paling akurat berdasarkan dokumen?", options: ["a) LAN - Nirkabel, WAN - Kabel", "b) PAN - Kabel, MAN - Nirkabel", "c) LAN - Kabel, PAN - Nirkabel", "d) WAN - Nirkabel, MAN - Kabel"], a: "c" },
-                    { q: "Apa yang terjadi pada tahun 1990-an dalam sejarah jaringan komputer?", options: ["a) Pengembangan ARPANET", "b) Penciptaan World Wide Web", "c) Munculnya media sosial", "d) Pengembangan IoT"], a: "b" },
-                    { q: "Jaringan apa yang paling cocok untuk menghubungkan beberapa negara?", options: ["a) LAN", "b) MAN", "c) WAN", "d) PAN"], a: "c" }
+                    { q: "Apa protokol pertama ARPANET?", a: "NCP" },
+                    { q: "Siapa pencipta Wi-Fi?", a: "Vic Hayes" },
+                    { q: "Tahun berapa Wi-Fi?", a: "1997" },
+                    { q: "Apa perbedaan MAN dan WAN?", a: "Skala kota vs. global" },
+                    { q: "Apa dampak jaringan pada ekonomi digital?", a: "GDP growth" },
+                    { q: "Apa jenis jaringan untuk universitas?", a: "CAN" },
+                    { q: "Siapa pengembang HTML?", a: "Tim Berners-Lee" },
+                    { q: "Tahun berapa HTML?", a: "1991" },
+                    { q: "Apa dampak pada lingkungan negatif?", a: "E-waste" },
+                    { q: "Apa WPAN?", a: "Wireless PAN" },
+                    { q: "Apa dampak sosial negatif?", a: "Desinformasi" },
+                    { q: "Apa BAN?", a: "Body Area Network" },
+                    { q: "Tahun berapa 4G?", a: "2010" },
+                    { q: "Apa dampak pada kesehatan positif?", a: "Wearables" },
+                    { q: "Apa NAN?", a: "Neighborhood Area Network" },
+                    { q: "Siapa pencipta Ethereum?", a: "Vitalik Buterin" },
+                    { q: "Tahun berapa Ethereum?", a: "2015" },
+                    { q: "Apa dampak pada keuangan terdesentralisasi?", a: "DeFi" },
+                    { q: "Apa partial mesh?", a: "Mesh parsial" },
+                    { q: "Apa dampak pada hak intelektual?", a: "Piracy" },
+                    { q: "Apa hierarchical topology?", a: "Topologi hirarkis" },
+                    { q: "Tahun berapa Facebook?", a: "2004" },
+                    { q: "Apa dampak pada politik negatif?", a: "Fake news" },
+                    { q: "Apa distributed model?", a: "Model terdistribusi" },
+                    { q: "Apa dampak pada data sovereignty?", a: "Regulasi nasional" },
+                    { q: "Tahun berapa CCPA?", a: "2020" },
+                    { q: "Apa dampak pada e-learning?", a: "Coursera" },
+                    { q: "Apa centralized model?", a: "Model sentralisasi" },
+                    { q: "Apa dampak pada hybrid work?", a: "Post-pandemi" },
+                    { q: "Tahun berapa pandemi COVID?", a: "2020" },
+                    { q: "Apa dampak pada carbon footprint?", a: "Data centers" },
+                    { q: "Apa 6G features?", a: "Terahertz speed" },
+                    { q: "Apa dampak pada machine learning?", a: "Network AI" },
+                    { q: "Apa NFV?", a: "Network Function Virtualization" },
+                    { q: "Apa dampak pada virtual reality?", a: "Metaverse" },
+                    { q: "Tahun berapa Metaverse hype?", a: "2021" },
+                    { q: "Apa dampak pada e-sports?", a: "Global competitions" },
+                    { q: "Apa fog computing?", a: "Komputasi kabut" },
+                    { q: "Apa dampak pada telemedicine?", a: "Remote diagnosis" },
+                    { q: "Tahun berapa 5G rollout?", a: "2019" },
+                    { q: "Apa dampak pada smart vehicles?", a: "V2X" },
+                    { q: "Apa decentralized networks?", a: "Blockchain networks" },
+                    { q: "Apa dampak pada logistics?", a: "IoT tracking" },
+                    { q: "Apa quantum cryptography?", a: "Keamanan kuantum" },
+                    { q: "Apa dampak pada cyber security?", a: "Advanced threats" },
+                    { q: "Apa ethical AI?", a: "AI yang etis" },
+                    { q: "Apa dampak pada digital divide?", a: "Inklusi teknologi" },
+                    { q: "Apa sustainable networking?", a: "Jaringan berkelanjutan" },
+                    { q: "Apa dampak pada cultural exchange?", a: "Global connectivity" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa kontribusi Paul Baran?", a: "Packet switching" },
+                    { q: "Siapa ketua Wi-Fi Alliance?", a: "Edgar Figueroa" },
+                    { q: "Tahun berapa 802.11?", a: "1997" },
+                    { q: "Apa metrik untuk LAN vs WAN?", a: "Latency dan bandwidth" },
+                    { q: "Apa GDP impact dari internet?", a: "5-10%" },
+                    { q: "Apa standar untuk CAN?", a: "ISO 11898" },
+                    { q: "Apa versi HTML terbaru?", a: "HTML5" },
+                    { q: "Tahun berapa HTML5?", a: "2014" },
+                    { q: "Apa e-waste global per tahun?", a: "50 juta ton" },
+                    { q: "Apa standar WPAN?", a: "802.15" },
+                    { q: "Apa regulasi untuk desinformasi?", a: "EU DSA" },
+                    { q: "Apa BAN applications?", a: "Wearable health" },
+                    { q: "Tahun berapa LTE?", a: "2009" },
+                    { q: "Apa dampak wearables pada kesehatan?", a: "Monitoring real-time" },
+                    { q: "Apa NAN in smart grid?", a: "Neighborhood smart meter" },
+                    { q: "Apa Ethereum 2.0?", a: "Proof of Stake" },
+                    { q: "Tahun berapa Eth2?", a: "2022" },
+                    { q: "Apa DeFi market cap?", a: "Miliaran USD" },
+                    { q: "Apa complexity partial mesh?", a: "O(n)" },
+                    { q: "Apa DMCA?", a: "Digital Millennium Copyright Act" },
+                    { q: "Apa hierarchical routing?", a: "Scalable routing" },
+                    { q: "Tahun berapa Meta rename?", a: "2021" },
+                    { q: "Apa Cambridge Analytica?", a: "Data scandal" },
+                    { q: "Apa distributed ledger?", a: "Blockchain" },
+                    { q: "Apa data sovereignty laws?", a: "GDPR, CCPA" },
+                    { q: "Tahun berapa LGPD?", a: "2020" },
+                    { q: "Apa MOOC platforms?", a: "edX, Coursera" },
+                    { q: "Apa centralized vs decentralized?", a: "Control point" },
+                    { q: "Apa hybrid work models?", a: "Remote + office" },
+                    { q: "Apa data center energy consumption?", a: "2% global electricity" },
+                    { q: "Apa 6G spectrum?", a: "Terahertz" },
+                    { q: "Apa AI in SDN?", a: "Autonomous networks" },
+                    { q: "Apa NFV vs VNF?", a: "Framework vs function" },
+                    { q: "Apa VR in networks?", a: "Low latency required" },
+                    { q: "Apa metaverse economy?", a: "Virtual goods" },
+                    { q: "Apa e-sports revenue?", a: "Miliaran USD" },
+                    { q: "Apa fog vs edge?", a: "Layered computing" },
+                    { q: "Apa telemedicine standards?", a: "HIPAA" },
+                    { q: "Apa 5G latency?", a: "1ms" },
+                    { q: "Apa V2X communication?", a: "Vehicle to everything" },
+                    { q: "Apa DAOs?", a: "Decentralized Autonomous Organizations" },
+                    { q: "Apa blockchain in supply chain?", a: "Traceability" },
+                    { q: "Apa QKD?", a: "Quantum Key Distribution" },
+                    { q: "Apa APT in cyber?", a: "Advanced Persistent Threat" },
+                    { q: "Apa AI fairness?", a: "Bias mitigation" },
+                    { q: "Apa digital inclusion initiatives?", a: "UN SDG" },
+                    { q: "Apa green data centers?", a: "Renewable energy" },
+                    { q: "Apa cultural globalization?", a: "Homogenization vs diversity" }
                 ]
             }
-        };
-
-        function setLevel() {
-            currentLevel = document.getElementById('level').value;
-            currentQ = 0; score = 0;
-            document.getElementById('intro').classList.remove('hidden');
-            document.getElementById('quiz').classList.add('hidden');
-            document.getElementById('remedial').classList.add('hidden');
-            document.getElementById('certificate').classList.add('hidden');
-        }
-
+        ];
         function startQuiz() {
             document.getElementById('intro').classList.add('hidden');
             document.getElementById('quiz').classList.remove('hidden');
             currentQ = 0;
             score = 0;
-            selectedQuestions = levels[currentLevel].questions.sort(() => 0.5 - Math.random()).slice(0, currentLevel === "sulit" ? 10 : 20);
-            document.getElementById('total').textContent = selectedQuestions.length;
+            scoresPerLevel = [0, 0, 0, 0];
+            selectedQuestions = [];
+            for (let i = 0; i < levels.length; i++) {
+                const shuffled = levels[i].questions.sort(() => 0.5 - Math.random()).slice(0, 5);
+                selectedQuestions = selectedQuestions.concat(shuffled.map(q => ({ ...q, level: i })));
+            }
+            selectedQuestions = selectedQuestions.sort(() => 0.5 - Math.random());
             loadQuestion();
         }
-
         function loadQuestion() {
             if (currentQ < selectedQuestions.length) {
                 const q = selectedQuestions[currentQ];
                 document.getElementById('question').textContent = q.q;
-                const optionsDiv = document.getElementById('options');
-                optionsDiv.innerHTML = '';
-                q.options.forEach(opt => {
-                    const label = document.createElement('label');
-                    const radio = document.createElement('input');
-                    radio.type = 'radio';
-                    radio.name = 'answer';
-                    radio.value = opt[0];
-                    label.appendChild(radio);
-                    label.appendChild(document.createTextNode(` ${opt}`));
-                    optionsDiv.appendChild(label);
-                    optionsDiv.appendChild(document.createElement('br'));
-                });
+                document.getElementById('answer').value = '';
                 document.getElementById('feedback').innerHTML = '';
-                document.getElementById('currentLevel').textContent = currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1) + ` [${currentQ + 1}/${selectedQuestions.length}]`;
+                document.getElementById('currentLevel').textContent = `Level ${q.level + 1} (🟦🟨🟩🟥)[${currentQ + 1}/20]`;
             } else {
                 checkPathway();
             }
         }
-
         function checkAnswer() {
-            const selected = document.querySelector('input[name="answer"]:checked');
-            if (selected) {
-                const userAns = selected.value[0];
-                const correctAns = selectedQuestions[currentQ].a;
-                const fb = document.getElementById('feedback');
-                if (userAns === correctAns) {
-                    score++;
-                    fb.innerHTML = '<div class="feedback correct">Benar!</div>';
-                } else {
-                    fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: ' + selectedQuestions[currentQ].options.find(opt => opt[0] === correctAns) + '</div>';
-                }
-                document.getElementById('score').textContent = score;
-                currentQ++;
-                setTimeout(loadQuestion, 1000);
+            const userAns = document.getElementById('answer').value.trim().toUpperCase();
+            const correctAns = selectedQuestions[currentQ].a.toUpperCase();
+            const level = selectedQuestions[currentQ].level;
+            const fb = document.getElementById('feedback');
+            if (userAns === correctAns) {
+                score++;
+                scoresPerLevel[level]++;
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
             } else {
-                alert("Pilih jawaban terlebih dahulu!");
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: ' + correctAns + '</div>';
             }
+            document.getElementById('score').textContent = score;
+            currentQ++;
+            setTimeout(loadQuestion, 1000);
         }
-
         function checkPathway() {
             document.getElementById('quiz').classList.add('hidden');
-            const percentage = (score / selectedQuestions.length) * 100;
-            if (percentage < 70) {
-                showRemedial();
+            const levelScores = scoresPerLevel.map(s => s / 5 * 100);
+            const weakestLevel = levelScores.indexOf(Math.min(...levelScores.filter(s => s < 70)));
+            if (weakestLevel >= 0) {
+                showRemedial(weakestLevel);
             } else {
-                showCert();
+                document.getElementById('advanced').classList.remove('hidden');
             }
         }
-
-        function showRemedial() {
+        function showRemedial(level) {
             const remedialContent = document.getElementById('remedialContent');
-            let content = '<h3>Refleksi dan Remedial</h3>';
-            content += '<p>Skor Anda: ' + percentage.toFixed(0) + '% (Kurang dari 70%). Silakan baca kembali PPT "Materi Pertemuan 1 - Jaringan Komputer" untuk memahami lebih lanjut. Berikut rangkuman singkat:</p>';
-            if (currentLevel === "mudah") {
-                content += '<ul>';
-                content += '<li><strong>Sejarah Jaringan:</strong> Dimulai dengan ARPANET (Leonard Kleinrock, 1960-an), email (Ray Tomlinson, 1970-an), sistem nama domain (Paul Mockapetris, 1980-an), World Wide Web (Berners-Lee, 1990-an), hingga media sosial dan IoT (2000-an).</li>';
-                content += '<li><strong>Jenis Jaringan:</strong> LAN (lokal), MAN (kota), WAN (luas), PAN (pribadi) berdasarkan jangkauan; kabel/nirkabel berdasarkan teknologi; client-server atau P2P berdasarkan fungsi.</li>';
-                content += '<li><strong>Mode Transmisi:</strong> Simplex (satu arah, misal TV), Half Duplex (dua arah bergantian, misal walkie-talkie), Full Duplex (dua arah bersamaan, misal telepon).</li>';
-                content += '<li><strong>Dampak:</strong> Meningkatkan komunikasi, pendidikan, bisnis, hiburan, dan aktivisme politik.</li>';
-                content += '</ul>';
-            } else if (currentLevel === "sedang") {
-                content += '<ul>';
-                content += '<li><strong>Perkembangan:</strong> ARPANET sebagai cikal bakal internet, email oleh Ray Tomlinson, sistem nama domain oleh Paul Mockapetris, dan IoT menghubungkan perangkat.</li>';
-                content += '<li><strong>Teknologi:</strong> Nirkabel (Wi-Fi, Bluetooth) untuk PAN/LAN, kabel untuk stabilitas WAN; aplikasi seperti IoT untuk otomatisasi.</li>';
-                content += '<li><strong>Mode Transmisi:</strong> Half Duplex cocok untuk komunikasi bergantian, Full Duplex untuk komunikasi real-time seperti telepon.</li>';
-                content += '<li><strong>Dampak Ekonomi:</strong> Jaringan meningkatkan efisiensi bisnis dan memperluas pasar global.</li>';
-                content += '</ul>';
-            } else if (currentLevel === "sulit") {
-                content += '<ul>';
-                content += '<li><strong>Tokoh dan Kontribusi:</strong> Leonard Kleinrock (ARPANET), Ray Tomlinson (email), Paul Mockapetris (DNS), Berners-Lee (WWW); Charles Babbage tidak terkait alamat domain.</li>';
-                content += '<li><strong>Jaringan Lanjutan:</strong> Client-Server bergantung pada server, P2P komunikasi langsung; LAN-Kabel, PAN-Nirkabel adalah kombinasi umum.</li>';
-                content += '<li><strong>IoT:</strong> Menghubungkan perangkat untuk otomatisasi, bukan meningkatkan tenaga kerja manual.</li>';
-                content += '<li><strong>Timeline:</strong> WWW (1990-an), media sosial (2000-an) adalah tonggak penting.</li>';
-                content += '</ul>';
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Sejarah jaringan dimulai dari ARPANET 1969. Jenis: LAN (lokal), WAN (luas). Dampak: Mempermudah komunikasi tapi risiko keamanan.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Perkembangan dari Ethernet 1973. Jenis: MAN, PAN. Dampak: Globalisasi ekonomi tapi privasi terganggu.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Protokol TCP/IP 1974. Jenis: WLAN, BAN. Dampak: Pendidikan online tapi desinformasi.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: 5G 2019. Jenis: SDN. Dampak: Industry 4.0 tapi cyber threats.</p>';
             }
-            content += '<p>Belajar ulang dari PPT dan coba lagi setelah memahami rangkuman di atas!</p>';
             remedialContent.innerHTML = content;
             document.getElementById('remedial').classList.remove('hidden');
         }
-
         function retryQuiz() {
-            currentQ = 0;
-            score = 0;
             document.getElementById('remedial').classList.add('hidden');
-            document.getElementById('quiz').classList.remove('hidden');
             startQuiz();
         }
-
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "PACKET SWITCHING") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Packet Switching.</div>';
+            }
+        }
         function showCert() {
-            document.getElementById('certificate').classList.remove('hidden');
-            const finalScore = (score / selectedQuestions.length) * 100;
+            document.getElementById('advanced').classList.add('hidden');
+            const finalScore = (score / 20) * 100;
             document.getElementById('finalScore').textContent = finalScore.toFixed(0);
+            document.getElementById('certificate').classList.remove('hidden');
         }
     </script>
 </body>
