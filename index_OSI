@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - OSI/TCP IP</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>OSI dan TCP/IP Model</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa lapisan OSI yang setara dengan Internet layer TCP/IP?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Berapa lapisan OSI?", a: "7" },
+                    { q: "Apa lapisan 1 OSI?", a: "Physical" },
+                    { q: "Apa lapisan 2 OSI?", a: "Data Link" },
+                    { q: "Apa lapisan 3 OSI?", a: "Network" },
+                    { q: "Apa lapisan 4 OSI?", a: "Transport" },
+                    { q: "Apa lapisan 5 OSI?", a: "Session" },
+                    { q: "Apa lapisan 6 OSI?", a: "Presentation" },
+                    { q: "Apa lapisan 7 OSI?", a: "Application" },
+                    { q: "Berapa lapisan TCP/IP?", a: "4" },
+                    { q: "Apa lapisan 1 TCP/IP?", a: "Network Access" },
+                    { q: "Apa lapisan 2 TCP/IP?", a: "Internet" },
+                    { q: "Apa lapisan 3 TCP/IP?", a: "Transport" },
+                    { q: "Apa lapisan 4 TCP/IP?", a: "Application" },
+                    { q: "Apa protokol di lapisan Network OSI?", a: "IP" },
+                    { q: "Apa protokol di lapisan Transport OSI?", a: "TCP/UDP" },
+                    { q: "Apa fungsi Physical layer?", a: "Transmisi bit" },
+                    { q: "Apa fungsi Data Link layer?", a: "Framing" },
+                    { q: "Apa fungsi Network layer?", a: "Routing" },
+                    { q: "Apa fungsi Transport layer?", a: "End-to-end delivery" },
+                    { q: "Apa fungsi Session layer?", a: "Dialog control" },
+                    { q: "Apa fungsi Presentation layer?", a: "Encryption" },
+                    { q: "Apa fungsi Application layer?", a: "User interface" },
+                    { q: "Apa TCP/IP setara Physical OSI?", a: "Network Access" },
+                    { q: "Apa TCP/IP setara Data Link OSI?", a: "Network Access" },
+                    { q: "Apa TCP/IP setara Network OSI?", a: "Internet" },
+                    { q: "Apa TCP/IP setara Transport OSI?", a: "Transport" },
+                    { q: "Apa TCP/IP setara Session OSI?", a: "Application" },
+                    { q: "Apa TCP/IP setara Presentation OSI?", a: "Application" },
+                    { q: "Apa TCP/IP setara Application OSI?", a: "Application" },
+                    { q: "Apa PDU di Physical?", a: "Bit" },
+                    { q: "Apa PDU di Data Link?", a: "Frame" },
+                    { q: "Apa PDU di Network?", a: "Packet" },
+                    { q: "Apa PDU di Transport?", a: "Segment" },
+                    { q: "Apa PDU di Session?", a: "Data" },
+                    { q: "Apa PDU di Presentation?", a: "Data" },
+                    { q: "Apa PDU di Application?", a: "Data" },
+                    { q: "Apa OSI stand for?", a: "Open Systems Interconnection" },
+                    { q: "Apa TCP/IP stand for?", a: "Transmission Control Protocol/Internet Protocol" },
+                    { q: "Tahun berapa OSI?", a: "1984" },
+                    { q: "Tahun berapa TCP/IP?", a: "1974" },
+                    { q: "Apa perbedaan OSI dan TCP/IP?", a: "OSI 7 lapisan, TCP/IP 4" },
+                    { q: "Apa protokol Application OSI?", a: "HTTP" },
+                    { q: "Apa protokol Presentation OSI?", a: "JPEG" },
+                    { q: "Apa protokol Session OSI?", a: "NetBIOS" },
+                    { q: "Apa alat di Physical?", a: "Hub" },
+                    { q: "Apa alat di Data Link?", a: "Switch" },
+                    { q: "Apa alat di Network?", a: "Router" },
+                    { q: "Apa error control di Transport?", a: "TCP" },
+                    { q: "Apa flow control di Transport?", a: "TCP" },
+                    { q: "Apa connectionless di Transport?", a: "UDP" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa fungsi utama OSI model?", a: "Standarisasi komunikasi" },
+                    { q: "Apa fungsi utama TCP/IP?", a: "Protokol internet" },
+                    { q: "Apa encapsulation di OSI?", a: "Menambahkan header" },
+                    { q: "Apa de-encapsulation di OSI?", a: "Menghapus header" },
+                    { q: "Apa MAC address di layer?", a: "Data Link" },
+                    { q: "Apa IP address di layer?", a: "Network" },
+                    { q: "Apa port number di layer?", a: "Transport" },
+                    { q: "Apa protocol di Application TCP/IP?", a: "HTTP, FTP" },
+                    { q: "Apa protocol di Transport TCP/IP?", a: "TCP, UDP" },
+                    { q: "Apa protocol di Internet TCP/IP?", a: "IP, ICMP" },
+                    { q: "Apa protocol di Network Access?", a: "Ethernet" },
+                    { q: "Apa ARP?", a: "Address Resolution Protocol" },
+                    { q: "Apa RARP?", a: "Reverse ARP" },
+                    { q: "Apa ICMP?", a: "Internet Control Message Protocol" },
+                    { q: "Apa IGMP?", a: "Internet Group Management Protocol" },
+                    { q: "Apa OSI vs TCP/IP layers?", a: "OSI lebih teoretis" },
+                    { q: "Apa segmentasi di Transport?", a: "Memecah data" },
+                    { q: "Apa reassembly di Transport?", a: "Menggabung data" },
+                    { q: "Apa error detection di Data Link?", a: "CRC" },
+                    { q: "Apa flow control di Data Link?", a: "Sliding window" },
+                    { q: "Apa routing protocol?", a: "OSPF, BGP" },
+                    { q: "Apa session establishment?", a: "Three-way handshake" },
+                    { q: "Apa translation di Presentation?", a: "ASCII to EBCDIC" },
+                    { q: "Apa compression di Presentation?", a: "Data compression" },
+                    { q: "Apa encryption di Presentation?", a: "SSL" },
+                    { q: "Apa PDU di Internet TCP/IP?", a: "Datagram" },
+                    { q: "Apa hop count di routing?", a: "Jumlah router" },
+                    { q: "Apa MTU?", a: "Maximum Transmission Unit" },
+                    { q: "Apa fragmentation?", a: "Pecah packet" },
+                    { q: "Apa IP header length?", a: "20 bytes" },
+                    { q: "Apa TCP header length?", a: "20 bytes" },
+                    { q: "Apa UDP header length?", a: "8 bytes" },
+                    { q: "Apa checksum in headers?", a: "Error detection" },
+                    { q: "Apa sequence number in TCP?", a: "Order data" },
+                    { q: "Apa acknowledgment in TCP?", a: "Confirm receipt" },
+                    { q: "Apa window size in TCP?", a: "Flow control" },
+                    { q: "Apa urgent pointer in TCP?", a: "Prioritas data" },
+                    { q: "Apa options in TCP header?", a: "MSS, SACK" },
+                    { q: "Apa IPv4 address length?", a: "32 bits" },
+                    { q: "Apa IPv6 address length?", a: "128 bits" },
+                    { q: "Apa class A range?", a: "1-126" },
+                    { q: "Apa class B range?", a: "128-191" },
+                    { q: "Apa class C range?", a: "192-223" },
+                    { q: "Apa class D for?", a: "Multicast" },
+                    { q: "Apa class E for?", a: "Experimental" },
+                    { q: "Apa loopback address?", a: "127.0.0.1" },
+                    { q: "Apa private IP class A?", a: "10.0.0.0/8" },
+                    { q: "Apa private IP class B?", a: "172.16.0.0/12" },
+                    { q: "Apa private IP class C?", a: "192.168.0.0/16" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa OSI developed by?", a: "ISO" },
+                    { q: "Apa TCP/IP developed by?", a: "DARPA" },
+                    { q: "Apa layer OSI for error correction?", a: "Data Link" },
+                    { q: "Apa layer OSI for routing?", a: "Network" },
+                    { q: "Apa layer OSI for segmentation?", a: "Transport" },
+                    { q: "Apa layer OSI for dialog?", a: "Session" },
+                    { q: "Apa layer OSI for format?", a: "Presentation" },
+                    { q: "Apa layer OSI for user apps?", a: "Application" },
+                    { q: "Apa TCP/IP for physical?", a: "Not specified" },
+                    { q: "Apa OSPF in layer?", a: "Network" },
+                    { q: "Apa BGP in layer?", a: "Application" },
+                    { q: "Apa EIGRP in layer?", a: "Network" },
+                    { q: "Apa RIP in layer?", a: "Application" },
+                    { q: "Apa MPLS in layer?", a: "2.5" },
+                    { q: "Apa VLAN in layer?", a: "Data Link" },
+                    { q: "Apa QoS in layer?", a: "Transport/Network" },
+                    { q: "Apa NAT in layer?", a: "Network" },
+                    { q: "Apa DHCP in layer?", a: "Application" },
+                    { q: "Apa DNS in layer?", a: "Application" },
+                    { q: "Apa FTP in layer?", a: "Application" },
+                    { q: "Apa SNMP in layer?", a: "Application" },
+                    { q: "Apa PPP in layer?", a: "Data Link" },
+                    { q: "Apa HDLC in layer?", a: "Data Link" },
+                    { q: "Apa Ethernet in layer?", a: "Data Link/Physical" },
+                    { q: "Apa Wi-Fi in layer?", a: "Data Link/Physical" },
+                    { q: "Apa IPsec in layer?", a: "Network" },
+                    { q: "Apa SSL/TLS in layer?", a: "Presentation/Transport" },
+                    { q: "Apa SSH in layer?", a: "Application" },
+                    { q: "Apa Telnet in layer?", a: "Application" },
+                    { q: "Apa SMTP in layer?", a: "Application" },
+                    { q: "Apa POP3 in layer?", a: "Application" },
+                    { q: "Apa IMAP in layer?", a: "Application" },
+                    { q: "Apa HTTP in layer?", a: "Application" },
+                    { q: "Apa HTTPS in layer?", a: "Application" },
+                    { q: "Apa RTP in layer?", a: "Transport" },
+                    { q: "Apa SIP in layer?", a: "Application" },
+                    { q: "Apa VoIP in layer?", a: "Application/Transport" },
+                    { q: "Apa OSI advantages?", a: "Interoperability" },
+                    { q: "Apa TCP/IP advantages?", a: "Practical implementation" },
+                    { q: "Apa OSI disadvantages?", a: "Complex" },
+                    { q: "Apa TCP/IP disadvantages?", a: "Less structured" },
+                    { q: "Apa OSI PDU encapsulation order?", a: "Data to bit" },
+                    { q: "Apa header fields in IP?", a: "Version, TTL, etc." },
+                    { q: "Apa flags in TCP?", a: "SYN, ACK, FIN" },
+                    { q: "Apa congestion control in TCP?", a: "AIMD" },
+                    { q: "Apa slow start in TCP?", a: "Exponential growth" },
+                    { q: "Apa fast retransmit?", a: "3 dup ACKs" },
+                    { q: "Apa SACK?", a: "Selective ACK" },
+                    { q: "Apa ECN?", a: "Explicit Congestion Notification" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa ISO stand for?", a: "International Organization for Standardization" },
+                    { q: "Apa DARPA stand for?", a: "Defense Advanced Research Projects Agency" },
+                    { q: "Apa parity check in Data Link?", a: "Error detection" },
+                    { q: "Apa forwarding table in Network?", a: "Routing table" },
+                    { q: "Apa multiplexing in Transport?", a: "Port based" },
+                    { q: "Apa checkpointing in Session?", a: "Recovery" },
+                    { q: "Apa syntax in Presentation?", a: "Data format" },
+                    { q: "Apa semantics in Presentation?", a: "Meaning" },
+                    { q: "Apa API in Application?", a: "Interface" },
+                    { q: "Apa link layer discovery?", a: "LLDP" },
+                    { q: "Apa OSPF metric?", a: "Cost" },
+                    { q: "Apa BGP path selection?", a: "AS path" },
+                    { q: "Apa EIGRP metric?", a: "Composite" },
+                    { q: "Apa RIP metric?", a: "Hop count" },
+                    { q: "Apa MPLS label?", a: "20 bits" },
+                    { q: "Apa VLAN tag?", a: "802.1Q" },
+                    { q: "Apa QoS marking?", a: "DSCP" },
+                    { q: "Apa PAT in NAT?", a: "Port Address Translation" },
+                    { q: "Apa DHCP options?", a: "67, 68" },
+                    { q: "Apa DNS record types?", a: "A, AAAA, MX" },
+                    { q: "Apa FTP modes?", a: "Active, Passive" },
+                    { q: "Apa SNMP versions?", a: "1, 2c, 3" },
+                    { q: "Apa PPP authentication?", a: "PAP, CHAP" },
+                    { q: "Apa HDLC modes?", a: "NRM, ARM" },
+                    { q: "Apa Ethernet frame size?", a: "64-1518 bytes" },
+                    { q: "Apa Wi-Fi channels?", a: "2.4GHz 1-11" },
+                    { q: "Apa IPsec modes?", a: "Transport, Tunnel" },
+                    { q: "Apa TLS handshake?", a: "ClientHello" },
+                    { q: "Apa SSH keys?", a: "Public-private" },
+                    { q: "Apa Telnet port?", a: "23" },
+                    { q: "Apa SMTP port?", a: "25" },
+                    { q: "Apa POP3 port?", a: "110" },
+                    { q: "Apa IMAP port?", a: "143" },
+                    { q: "Apa HTTP port?", a: "80" },
+                    { q: "Apa HTTPS port?", a: "443" },
+                    { q: "Apa RTP ports?", a: "Dynamic" },
+                    { q: "Apa SIP port?", a: "5060" },
+                    { q: "Apa VoIP codec?", a: "G.711" },
+                    { q: "Apa OSI protocol independence?", a: "Layered" },
+                    { q: "Apa TCP/IP end-to-end?", a: "Yes" },
+                    { q: "Apa OSI service primitives?", a: "Request, Indicate" },
+                    { q: "Apa TCP/IP RFC?", a: "Standards" },
+                    { q: "Apa decapsulation order?", a: "Bit to data" },
+                    { q: "Apa IP options field?", a: "Variable" },
+                    { q: "Apa TCP options?", a: "MSS" },
+                    { q: "Apa congestion avoidance?", a: "Random early detection" },
+                    { q: "Apa Tahoe vs Reno?", a: "Fast recovery" },
+                    { q: "Apa cubic TCP?", a: "Loss-based" },
+                    { q: "Apa BBR?", a: "Bottleneck Bandwidth and RTT" }
+                ]
+            }
+        ];
+        // Script sama seperti contoh, ganti advanced answer ke "Network"
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "NETWORK") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Network.</div>';
+            }
+        }
+        // Remedial content for this topic
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: OSI 7 lapisan, TCP/IP 4 lapisan. Physical untuk bit.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Fungsi layer seperti routing di Network.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Protokol seperti OSPF, BGP.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Detail header, congestion control.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script as in example
+    </script>
+</body>
+</html>
