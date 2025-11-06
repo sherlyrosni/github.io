@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Teknik Pengabelan dan Crimping</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Teknik Pengabelan dan Crimping</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa urutan warna T568B untuk pin 1-8?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu UTP?", a: "Unshielded Twisted Pair" },
+                    { q: "Apa itu STP?", a: "Shielded Twisted Pair" },
+                    { q: "Apa itu RJ45?", a: "Konektor Ethernet" },
+                    { q: "Apa alat crimping?", a: "Crimping tool" },
+                    { q: "Apa straight cable?", a: "Untuk device berbeda" },
+                    { q: "Apa crossover cable?", a: "Untuk device sama" },
+                    { q: "Apa T568A?", a: "Standar warna" },
+                    { q: "Apa T568B?", a: "Standar warna" },
+                    { q: "Apa pin 1 T568B?", a: "Orange white" },
+                    { q: "Apa pin 2 T568B?", a: "Orange" },
+                    { q: "Apa pin 3 T568B?", a: "Green white" },
+                    { q: "Apa pin 6 T568B?", a: "Green" },
+                    { q: "Apa Cat5e?", a: "100Mbps" },
+                    { q: "Apa Cat6?", a: "1Gbps" },
+                    { q: "Apa fiber optic?", a: "Kabel cahaya" },
+                    { q: "Apa coaxial?", a: "Kabel TV" },
+                    { q: "Apa wire stripper?", a: "Pemotong kulit kabel" },
+                    { q: "Apa cable tester?", a: "Penguji kabel" },
+                    { q: "Apa punchdown tool?", a: "Untuk keystone" },
+                    { q: "Apa patch panel?", a: "Panel koneksi" },
+                    { q: "Apa jarak max UTP?", a: "100m" },
+                    { q: "Apa EMI?", a: "Electromagnetic Interference" },
+                    { q: "Apa crosstalk?", a: "Gangguan antar kawat" },
+                    { q: "Apa attenuation?", a: "Hilang sinyal" },
+                    { q: "Apa single-mode fiber?", a: "Jarak jauh" },
+                    { q: "Apa multi-mode fiber?", a: "Jarak pendek" },
+                    { q: "Apa ST connector?", a: "Straight Tip" },
+                    { q: "Apa LC connector?", a: "Lucent Connector" },
+                    { q: "Apa SC connector?", a: "Subscriber Connector" },
+                    { q: "Apa MTP connector?", a: "Multi-fiber" },
+                    { q: "Apa rollover cable?", a: "Console cable" },
+                    { q: "Apa null modem?", a: "Crossover serial" },
+                    { q: "Apa DB9?", a: "Serial connector" },
+                    { q: "Apa RG6?", a: "Coaxial type" },
+                    { q: "Apa BNC connector?", a: "Bayonet" },
+                    { q: "Apa F connector?", a: "Untuk TV" },
+                    { q: "Apa plenum cable?", a: "Fire resistant" },
+                    { q: "Apa PVC cable?", a: "Standard" },
+                    { q: "Apa LSZH cable?", a: "Low smoke" },
+                    { q: "Apa direct burial cable?", a: "Untuk tanah" },
+                    { q: "Apa aerial cable?", a: "Udara" },
+                    { q: "Apa keystone jack?", a: "Wall outlet" },
+                    { q: "Apa patch cord?", a: "Kabel pendek" },
+                    { q: "Apa loopback plug?", a: "Penguji port" },
+                    { q: "Apa tone generator?", a: "Pelacak kabel" },
+                    { q: "Apa OTDR?", a: "Optical Time Domain Reflectometer" },
+                    { q: "Apa fusion splicer?", a: "Penyambung fiber" },
+                    { q: "Apa mechanical splice?", a: "Splice tanpa fusion" },
+                    { q: "Apa cable certifier?", a: "Penguji standar" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa fungsi twisting di UTP?", a: "Kurangi crosstalk" },
+                    { q: "Apa shield di STP?", a: "Kurangi EMI" },
+                    { q: "Apa pinout straight?", a: "Sama kedua ujung" },
+                    { q: "Apa pinout crossover?", a: "Tukar TX/RX" },
+                    { q: "Apa perbedaan T568A dan B?", a: "Warna pin 1-3-6" },
+                    { q: "Apa Cat5e bandwidth?", a: "100MHz" },
+                    { q: "Apa Cat6 bandwidth?", a: "250MHz" },
+                    { q: "Apa core fiber optic?", a: "Glass/silica" },
+                    { q: "Apa cladding fiber?", a: "Pembungkus" },
+                    { q: "Apa RG59?", a: "Coaxial thin" },
+                    { q: "Apa langkah crimping 1?", a: "Potong kabel" },
+                    { q: "Apa langkah crimping 2?", a: "Strip jaket" },
+                    { q: "Apa langkah crimping 3?", a: "Urutkan warna" },
+                    { q: "Apa langkah crimping 4?", a: "Masukkan RJ45" },
+                    { q: "Apa langkah crimping 5?", a: "Crimp" },
+                    { q: "Apa tes continuity?", a: "Cable tester" },
+                    { q: "Apa 66 block?", a: "Punchdown untuk voice" },
+                    { q: "Apa 110 block?", a: "Punchdown untuk data" },
+                    { q: "Apa max bend radius fiber?", a: "10x diameter" },
+                    { q: "Apa insertion loss?", a: "Hilang di connector" },
+                    { q: "Apa return loss?", a: "Pantulan sinyal" },
+                    { q: "Apa NEXT?", a: "Near-End Crosstalk" },
+                    { q: "Apa FEXT?", a: "Far-End Crosstalk" },
+                    { q: "Apa PSNEXT?", a: "Power Sum NEXT" },
+                    { q: "Apa ELFEXT?", a: "Equal Level FEXT" },
+                    { q: "Apa ACR?", a: "Attenuation to Crosstalk Ratio" },
+                    { q: "Apa delay skew?", a: "Perbedaan waktu" },
+                    { q: "Apa wire map?", a: "Pemetaan pin" },
+                    { q: "Apa split pair?", a: "Kesalahan pasangan" },
+                    { q: "Apa reversed pair?", a: "Tukar pin" },
+                    { q: "Apa open circuit?", a: "Putus" },
+                    { q: "Apa short circuit?", a: "Hubung singkat" },
+                    { q: "Apa TIA/EIA?", a: "Standar cabling" },
+                    { q: "Apa ANSI?", a: "American standard" },
+                    { q: "Apa ISO?", a: "International standard" },
+                    { q: "Apa horizontal cabling?", a: "Work area to closet" },
+                    { q: "Apa backbone cabling?", a: "Antar closet" },
+                    { q: "Apa entrance facility?", a: "Masuk building" },
+                    { q: "Apa equipment room?", a: "Server room" },
+                    { q: "Apa telecommunications closet?", a: "IDF" },
+                    { q: "Apa work area?", a: "User desk" },
+                    { q: "Apa max horizontal length?", a: "90m" },
+                    { q: "Apa patch cord max?", a: "10m" },
+                    { q: "Apa fiber connector polishing?", a: "PC, UPC, APC" },
+                    { q: "Apa cleaver?", a: "Pemotong fiber" },
+                    { q: "Apa stripping tool?", a: "Pemotong buffer" },
+                    { q: "Apa epoxy connector?", a: "Adhesive" },
+                    { q: "Apa anaerobic connector?", a: "No heat" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa TIA-568-C?", a: "Cabling standard" },
+                    { q: "Apa 10BASE-T?", a: "Cat3" },
+                    { q: "Apa 100BASE-TX?", a: "Cat5" },
+                    { q: "Apa 1000BASE-T?", a: "Cat5e" },
+                    { q: "Apa 10GBASE-T?", a: "Cat6a" },
+                    { q: "Apa OM1 fiber?", a: "62.5/125 multi-mode" },
+                    { q: "Apa OM3 fiber?", a: "Laser optimized" },
+                    { q: "Apa OS1 fiber?", a: "Single-mode indoor" },
+                    { q: "Apa OS2 fiber?", a: "Single-mode outdoor" },
+                    { q: "Apa RG8?", a: "Thick coaxial" },
+                    { q: "Apa crimping standard?", a: "8P8C" },
+                    { q: "Apa auto MDI-X?", a: "Auto crossover" },
+                    { q: "Apa plenum rating?", a: "UL 910" },
+                    { q: "Apa riser rating?", a: "UL 1666" },
+                    { q: "Apa LSZH?", a: "Low Smoke Zero Halogen" },
+                    { q: "Apa channel test?", a: "End to end" },
+                    { q: "Apa permanent link test?", a: "Horizontal only" },
+                    { q: "Apa tier 1 tester?", a: "OLTS" },
+                    { q: "Apa tier 2 tester?", a: "OTDR" },
+                    { q: "Apa dB loss fiber?", a: "0.3 dB/km" },
+                    { q: "Apa connector loss?", a: "0.5 dB" },
+                    { q: "Apa splice loss?", a: "0.1 dB" },
+                    { q: "Apa bend loss?", a: "Macro/micro bend" },
+                    { q: "Apa chromatic dispersion?", a: "Wavelength spread" },
+                    { q: "Apa polarization mode dispersion?", a: "PMD" },
+                    { q: "Apa 850nm?", a: "Multi-mode" },
+                    { q: "Apa 1310nm?", a: "Single-mode" },
+                    { q: "Apa 1550nm?", a: "Long haul" },
+                    { q: "Apa DWDM?", a: "Dense Wavelength Division Multiplexing" },
+                    { q: "Apa CWDM?", a: "Coarse WDM" },
+                    { q: "Apa fiber buffer?", a: "900um, 250um" },
+                    { q: "Apa tight buffer?", a: "Indoor" },
+                    { q: "Apa loose tube?", a: "Outdoor" },
+                    { q: "Apa armored cable?", a: "Rodent protection" },
+                    { q: "Apa aerial messenger?", a: "Support wire" },
+                    { q: "Apa direct burial armor?", a: "Waterproof" },
+                    { q: "Apa keystone types?", a: "Cat5e, Cat6" },
+                    { q: "Apa patch panel ports?", a: "24, 48" },
+                    { q: "Apa tone probe?", a: "Inductive amplifier" },
+                    { q: "Apa fiber cleave angle?", a: "90 degrees" },
+                    { q: "Apa epoxy cure time?", a: "Oven 10 min" },
+                    { q: "Apa anaerobic adhesive?", a: "Quick set" },
+                    { q: "Apa fusion splice dB?", a: "0.05" },
+                    { q: "Apa mechanical splice dB?", a: "0.3" },
+                    { q: "Apa cable certifier standards?", a: "TIA Level III" },
+                    { q: "Apa Cat6a frequency?", a: "500MHz" },
+                    { q: "Apa 25GBASE-T?", a: "Cat8" },
+                    { q: "Apa fiber OTDR event?", a: "Splice, bend" },
+                    { q: "Apa ghost in OTDR?", a: "Reflection artifact" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa TIA-568 pinout?", a: "A or B" },
+                    { q: "Apa 1000BASE-SX?", a: "Multi-mode 850nm" },
+                    { q: "Apa 1000BASE-LX?", a: "Single-mode 1310nm" },
+                    { q: "Apa 10GBASE-SR?", a: "Short range multi-mode" },
+                    { q: "Apa 10GBASE-LR?", a: "Long range single-mode" },
+                    { q: "Apa OM4 fiber?", a: "50/125 4700 MHz.km" },
+                    { q: "Apa OM5 fiber?", a: "Wideband multi-mode" },
+                    { q: "Apa OS2 G.652?", a: "Low water peak" },
+                    { q: "Apa RG11?", a: "Thick coaxial" },
+                    { q: "Apa 8P8C wiring?", a: "Twisted pairs" },
+                    { q: "Apa USOC pinout?", a: "For phone" },
+                    { q: "Apa CMP rating?", a: "Plenum" },
+                    { q: "Apa CMR rating?", a: "Riser" },
+                    { q: "Apa LS0H?", a: "Low Smoke Zero Halogen" },
+                    { q: "Apa Tier 1 test?", a: "Length, attenuation" },
+                    { q: "Apa Tier 2 test?", a: "OTDR trace" },
+                    { q: "Apa OLTS?", a: "Optical Loss Test Set" },
+                    { q: "Apa LSPM?", a: "Light Source Power Meter" },
+                    { q: "Apa 1310nm loss?", a: "0.4 dB/km" },
+                    { q: "Apa APC connector RL?", a: "60 dB" },
+                    { q: "Apa UPC connector RL?", a: "50 dB" },
+                    { q: "Apa AXT?", a: "Alien Crosstalk" },
+                    { q: "Apa PSACR?", a: "Power Sum ACR" },
+                    { q: "Apa propagation delay?", a: "Signal travel time" },
+                    { q: "Apa 1550nm?", a: "Lowest attenuation" },
+                    { q: "Apa dispersion compensating fiber?", a: "DCF" },
+                    { q: "Apa PMD limit?", a: "0.5 ps/sqrt(km)" },
+                    { q: "Apa O-band?", a: "1260-1360nm" },
+                    { q: "Apa C-band?", a: "1530-1565nm" },
+                    { q: "Apa L-band?", a: "1565-1625nm" },
+                    { q: "Apa fiber buffer colors?", a: "12 standard colors" },
+                    { q: "Apa breakout cable?", a: "Multi-fiber to single" },
+                    { q: "Apa armored fiber?", a: "Steel tape" },
+                    { q: "Apa ADSS cable?", a: "All-Dielectric Self-Supporting" },
+                    { q: "Apa OPGW?", a: "Optical Power Ground Wire" },
+                    { q: "Apa RJ11?", a: "Phone connector" },
+                    { q: "Apa 66 block wiring?", a: "25 pair" },
+                    { q: "Apa Krone tool?", a: "Punchdown alternative" },
+                    { q: "Apa fiber cleave quality?", a: "Mirror finish" },
+                    { q: "Apa heat-shrink oven?", a: "For epoxy" },
+                    { q: "Apa UV cure?", a: "For some adhesives" },
+                    { q: "Apa arc fusion?", a: "Electric arc" },
+                    { q: "Apa V-groove splice?", a: "Mechanical alignment" },
+                    { q: "Apa Fluke certifier?", a: "DSX-5000" },
+                    { q: "Apa Cat7 frequency?", a: "600MHz" },
+                    { q: "Apa 40GBASE-T?", a: "Cat8" },
+                    { q: "Apa OTDR dead zone?", a: "Event/attenuation" },
+                    { q: "Apa gainer in OTDR?", a: "Splice gain artifact" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "ORANGE WHITE, ORANGE, GREEN WHITE, BLUE, BLUE WHITE, GREEN, BROWN WHITE, BROWN") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Orange White, Orange, Green White, Blue, Blue White, Green, Brown White, Brown.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: UTP, RJ45, straight vs crossover.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Langkah crimping, T568A/B, Cat categories.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Fiber types, testers, loss metrics.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Standards, advanced testing, splice methods.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
