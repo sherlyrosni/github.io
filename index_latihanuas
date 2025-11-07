@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Persiapan UAS (Rangkuman 9-14)</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Persiapan UAS (Rangkuman 9-14)</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa regulasi untuk enkripsi wireless?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar (Mix 9-14)
+                questions: [
+                    { q: "Apa IP class A?", a: "1-126" },
+                    { q: "Apa topologi bus?", a: "Satu kabel" },
+                    { q: "Apa routing protocol?", a: "OSPF" },
+                    { q: "Apa 802.11a?", a: "5GHz" },
+                    { q: "Apa WEP?", a: "Old encryption" },
+                    { q: "Apa GDPR?", a: "Data protection" },
+                    { q: "Apa subnet mask /24?", a: "255.255.255.0" },
+                    { q: "Apa star topology?", a: "Central hub" },
+                    { q: "Apa RIP metric?", a: "Hop" },
+                    { q: "Apa Bluetooth?", a: "802.15" },
+                    { q: "Apa WPA2?", a: "AES" },
+                    { q: "Apa CCPA?", a: "California privacy" },
+                    { q: "Apa private IP?", a: "10.0.0.0" },
+                    { q: "Apa ring topology?", a: "Lingkaran" },
+                    { q: "Apa BGP?", a: "Exterior" },
+                    { q: "Apa NFC?", a: "Short range" },
+                    { q: "Apa PSK?", a: "Pre-shared key" },
+                    { q: "Apa HIPAA?", a: "Health data" },
+                    { q: "Apa DHCP?", a: "Assign IP" },
+                    { q: "Apa mesh topology?", a: "Full connected" },
+                    { q: "Apa EIGRP?", a: "Cisco hybrid" },
+                    { q: "Apa Zigbee?", a: "Low power" },
+                    { q: "Apa EAP?", a: "Authentication" },
+                    { q: "Apa PCI DSS?", a: "Card security" },
+                    { q: "Apa IPv6?", a: "128 bits" },
+                    { q: "Apa tree topology?", a: "Hirarkis" },
+                    { q: "Apa IS-IS?", a: "Link state" },
+                    { q: "Apa LoRa?", a: "Long range" },
+                    { q: "Apa RADIUS?", a: "Auth server" },
+                    { q: "Apa FCC?", a: "US comms" },
+                    { q: "Apa NAT?", a: "Address translation" },
+                    { q: "Apa hybrid topology?", a: "Campuran" },
+                    { q: "Apa static routing?", a: "Manual" },
+                    { q: "Apa 5G?", a: "NR" },
+                    { q: "Apa TKIP?", a: "WPA" },
+                    { q: "Apa ITU?", a: "Telecom union" },
+                    { q: "Apa VLSM?", a: "Variable mask" },
+                    { q: "Apa point-to-point?", a: "Dua node" },
+                    { q: "Apa dynamic routing?", a: "Protocol" },
+                    { q: "Apa NB-IoT?", a: "Narrowband" },
+                    { q: "Apa SAE?", a: "WPA3 handshake" },
+                    { q: "Apa IEEE?", a: "Standards" },
+                    { q: "Apa CIDR?", a: "Classless" },
+                    { q: "Apa multipoint?", a: "Banyak node" },
+                    { q: "Apa AD value?", a: "Administrative Distance" },
+                    { q: "Apa LTE-M?", a: "Machine" },
+                    { q: "Apa OWE?", a: "Open encryption" },
+                    { q: "Apa ISO 27001?", a: "Security management" }
+                ]
+            },
+            { // Level 2: Menengah (Mix 9-14)
+                questions: [
+                    { q: "Apa subnetting?", a: "Bagi jaringan" },
+                    { q: "Apa collision domain?", a: "Bus" },
+                    { q: "Apa OSPF?", a: "Link state" },
+                    { q: "Apa channel 2.4GHz?", a: "1,6,11" },
+                    { q: "Apa WPA TKIP?", a: "RC4" },
+                    { q: "Apa net neutrality?", a: "Equal traffic" },
+                    { q: "Apa hosts /24?", a: "254" },
+                    { q: "Apa STP?", a: "Loop prevention" },
+                    { q: "Apa BGP attributes?", a: "AS path" },
+                    { q: "Apa 5GHz UNII?", a: "Bands" },
+                    { q: "Apa 4-way handshake?", a: "Key exchange" },
+                    { q: "Apa DMCA?", a: "Copyright" },
+                    { q: "Apa VLSM?", a: "Efisien subnet" },
+                    { q: "Apa root bridge?", a: "Lowest ID" },
+                    { q: "Apa EIGRP metric?", a: "Composite" },
+                    { q: "Apa MU-MIMO?", a: "Multi user" },
+                    { q: "Apa PTK?", a: "Pairwise key" },
+                    { q: "Apa COPPA?", a: "Child privacy" },
+                    { q: "Apa DHCP DORA?", a: "Discover Offer Request Ack" },
+                    { q: "Apa EtherChannel?", a: "Link agg" },
+                    { q: "Apa RIP v2?", a: "Classless" },
+                    { q: "Apa OFDMA?", a: "Access multiple" },
+                    { q: "Apa EAP-TLS?", a: "Cert based" },
+                    { q: "Apa CAN-SPAM?", a: "Anti spam" },
+                    { q: "Apa IPv6 link local?", a: "FE80" },
+                    { q: "Apa VLAN?", a: "Broadcast domain" },
+                    { q: "Apa IS-IS areas?", a: "Level 1/2" },
+                    { q: "Apa TWT?", a: "Target Wake" },
+                    { q: "Apa PMF?", a: "Protected frames" },
+                    { q: "Apa ECPA?", a: "Privacy comms" },
+                    { q: "Apa NAT types?", a: "Static dynamic" },
+                    { q: "Apa PVST?", a: "Per VLAN STP" },
+                    { q: "Apa AD for OSPF?", a: "110" },
+                    { q: "Apa Bluetooth LE?", a: "Low energy" },
+                    { q: "Apa GTK?", a: "Group key" },
+                    { q: "Apa CFAA?", a: "Computer fraud" },
+                    { q: "Apa SLAAC?", a: "Stateless IPv6" },
+                    { q: "Apa VTP?", a: "VLAN trunk protocol" },
+                    { q: "Apa AD for RIP?", a: "120" },
+                    { q: "Apa Zigbee mesh?", a: "Self healing" },
+                    { q: "Apa 802.1X components?", a: "Supplicant authenticator server" },
+                    { q: "Apa CISA?", a: "Cyber sharing" },
+                    { q: "Apa stateful DHCPv6?", a: "Address info" },
+                    { q: "Apa trunk port?", a: "Tagged" },
+                    { q: "Apa AD for EIGRP?", a: "90" },
+                    { q: "Apa LoRa SF?", a: "Spreading" },
+                    { q: "Apa KRACK?", a: "WPA2 vuln" },
+                    { q: "Apa LGPD?", a: "Brazil GDPR" }
+                ]
+            },
+            { // Level 3: Lanjutan (Mix 9-14)
+                questions: [
+                    { q: "Apa summary route?", a: "Aggregate" },
+                    { q: "Apa RSTP?", a: "Rapid STP" },
+                    { q: "Apa OSPF LSA?", a: "Link State Advertisement" },
+                    { q: "Apa DFS channels?", a: "Radar avoidance" },
+                    { q: "Apa WPA3 SAE?", a: "Dragonfly" },
+                    { q: "Apa DPIA?", a: "Impact assessment" },
+                    { q: "Apa /29 hosts?", a: "6" },
+                    { q: "Apa port roles STP?", a: "Root designated" },
+                    { q: "Apa EIGRP successor?", a: "Best path" },
+                    { q: "Apa 802.11ax features?", a: "OFDMA BSS color" },
+                    { q: "Apa 4-way MIC?", a: "Integrity" },
+                    { q: "Apa breach notification?", a: "72 hours" },
+                    { q: "Apa DHCP snooping?", a: "Prevent rogue" },
+                    { q: "Apa VTP pruning?", a: "Reduce broadcast" },
+                    { q: "Apa IS-IS CLNS?", a: "Connectionless" },
+                    { q: "Apa MU-MIMO wave2?", a: "Downlink" },
+                    { q: "Apa EAP-FAST?", a: "PAC" },
+                    { q: "Apa right to be forgotten?", a: "Erasure" },
+                    { q: "Apa IPv6 EUI-64?", a: "MAC based" },
+                    { q: "Apa PVLAN?", a: "Private VLAN" },
+                    { q: "Apa AD for BGP?", a: "20 EBGP" },
+                    { q: "Apa TWT?", a: "Power save" },
+                    { q: "Apa PMF mandatory?", a: "WPA3" },
+                    { q: "Apa HIPAA BA?", a: "Business Associate" },
+                    { q: "Apa ND in IPv6?", a: "ARP replacement" },
+                    { q: "Apa DTP?", a: "Dynamic trunk" },
+                    { q: "Apa RIPng?", a: "IPv6 RIP" },
+                    { q: "Apa 6GHz Wi-Fi?", a: "Wi-Fi 6E" },
+                    { q: "Apa WPS vuln?", a: "PIN brute" },
+                    { q: "Apa PCI SAQ?", a: "Self assessment" },
+                    { q: "Apa RA guard?", a: "Block rogue RA" },
+                    { q: "Apa native VLAN?", a: "Untagged" },
+                    { q: "Apa EIGRP variance?", a: "Unequal load" },
+                    { q: "Apa NB-IoT?", a: "IoT standard" },
+                    { q: "Apa evil twin?", a: "Fake AP" },
+                    { q: "Apa FCC Part 15?", a: "Unlicensed" },
+                    { q: "Apa DAD?", a: "Duplicate detect" },
+                    { q: "Apa trunk allowed?", a: "VLAN list" },
+                    { q: "Apa OSPFv3?", a: "IPv6 OSPF" },
+                    { q: "Apa BLE?", a: "Bluetooth LE" },
+                    { q: "Apa deauth attack?", a: "Disconnect" },
+                    { q: "Apa ITU-T?", a: "Standards" },
+                    { q: "Apa MLD?", a: "IPv6 multicast" },
+                    { q: "Apa voice VLAN?", a: "Auxiliary" },
+                    { q: "Apa AD for static?", a: "1" },
+                    { q: "Apa LoRaWAN?", a: "LPWAN" },
+                    { q: "Apa SAE dragonblood?", a: "Vuln" },
+                    { q: "Apa ISO 27001 annex?", a: "Controls" }
+                ]
+            },
+            { // Level 4: Master (Mix 9-14)
+                questions: [
+                    { q: "Apa subnets /27?", a: "8" },
+                    { q: "Apa MSTP?", a: "Multiple STP" },
+                    { q: "Apa OSPF DR?", a: "Designated Router" },
+                    { q: "Apa Wi-Fi 7?", a: "802.11be" },
+                    { q: "Apa KRACK fix?", a: "Patch" },
+                    { q: "Apa GDPR fine?", a: "4%" },
+                    { q: "Apa magic number /28?", a: "16" },
+                    { q: "Apa BPDU guard?", a: "Portfast protect" },
+                    { q: "Apa EIGRP FD?", a: "Feasible Distance" },
+                    { q: "Apa 1024-QAM?", a: "Wi-Fi 6" },
+                    { q: "Apa message 3 handshake?", a: "GTK" },
+                    { q: "Apa Article 32?", a: "Security" },
+                    { q: "Apa option 82?", a: "Relay info" },
+                    { q: "Apa VTP v3?", a: "PVLAN" },
+                    { q: "Apa IS-IS NSAP?", a: "NET address" },
+                    { q: "Apa UL OFDMA?", a: "Uplink" },
+                    { q: "Apa EAP code 25?", a: "PEAP" },
+                    { q: "Apa DPIA?", a: "High risk" },
+                    { q: "Apa 6to4?", a: "Tunnel" },
+                    { q: "Apa promiscuous port?", a: "PVLAN" },
+                    { q: "Apa BGP local pref?", a: "Higher preferred" },
+                    { q: "Apa spatial reuse?", a: "BSS color" },
+                    { q: "Apa 802.11w?", a: "PMF" },
+                    { q: "Apa PCI QSA?", a: "Assessor" },
+                    { q: "Apa RS message?", a: "Router solicit" },
+                    { q: "Apa trunk encapsulation?", a: "Dot1q" },
+                    { q: "Apa EIGRP stuck in active?", a: "Query no reply" },
+                    { q: "Apa Sigfox?", a: "Ultra narrowband" },
+                    { q: "Apa Dragonfly?", a: "SAE" },
+                    { q: "Apa NIST CSF?", a: "Framework" },
+                    { q: "Apa NAT64?", a: "IPv6 to 4" },
+                    { q: "Apa isolated port?", a: "PVLAN" },
+                    { q: "Apa RIP max hop?", a: "15" },
+                    { q: "Apa Thread?", a: "IPv6 mesh" },
+                    { q: "Apa Pixie Dust?", a: "WPS attack" },
+                    { q: "Apa SOX 404?", a: "Controls" },
+                    { q: "Apa M flag RA?", a: "Managed" },
+                    { q: "Apa VTP bomb?", a: "High revision" },
+                    { q: "Apa OSPF stub?", a: "No external" },
+                    { q: "Apa Z-Wave?", a: "Home auto" },
+                    { q: "Apa Reaver?", a: "WPS tool" },
+                    { q: "Apa ENISA?", a: "EU security" },
+                    { q: "Apa stateful DHCPv6?", a: "Solicit advertise" },
+                    { q: "Apa community PVLAN?", a: "Group" },
+                    { q: "Apa AD for IS-IS?", a: "115" },
+                    { q: "Apa UWB?", a: "Precise location" },
+                    { q: "Apa wardriving?", a: "AP scan" },
+                    { q: "Apa APPI?", a: "Japan privacy" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "WPA3") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: WPA3.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Rangkuman IP, topologi, routing, wireless standards, encryption, regulations.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Subnet, STP, OSPF, channels, WPA, GDPR.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: VLSM, VTP, EIGRP, MU-MIMO, EAP, DPIA.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Summary routes, MSTP, BGP, Wi-Fi 7, KRACK, GDPR articles.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
