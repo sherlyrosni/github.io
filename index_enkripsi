@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Metode Enkripsi dan Autentikasi Nirkabel</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Metode Enkripsi dan Autentikasi Nirkabel</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa enkripsi paling aman untuk Wi-Fi?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu WEP?", a: "Wired Equivalent Privacy" },
+                    { q: "Apa itu WPA?", a: "Wi-Fi Protected Access" },
+                    { q: "Apa itu WPA2?", a: "WPA with AES" },
+                    { q: "Apa itu WPA3?", a: "Latest Wi-Fi security" },
+                    { q: "Apa open authentication?", a: "No password" },
+                    { q: "Apa shared key?", a: "WEP key" },
+                    { q: "Apa PSK?", a: "Pre-Shared Key" },
+                    { q: "Apa EAP?", a: "Extensible Authentication Protocol" },
+                    { q: "Apa RADIUS?", a: "Remote Authentication Server" },
+                    { q: "Apa TKIP?", a: "Temporal Key Integrity Protocol" },
+                    { q: "Apa AES?", a: "Advanced Encryption Standard" },
+                    { q: "Apa RC4?", a: "Stream cipher" },
+                    { q: "Apa IV in WEP?", a: "Initialization Vector" },
+                    { q: "Apa SAE?", a: "Simultaneous Authentication of Equals" },
+                    { q: "Apa OWE?", a: "Opportunistic Wireless Encryption" },
+                    { q: "Apa 802.1X?", a: "Port-based authentication" },
+                    { q: "Apa supplicant?", a: "Client" },
+                    { q: "Apa authenticator?", a: "AP/switch" },
+                    { q: "Apa authentication server?", a: "RADIUS" },
+                    { q: "Apa EAP-TLS?", a: "Certificate based" },
+                    { q: "Apa EAP-TTLS?", a: "Tunnel TLS" },
+                    { q: "Apa PEAP?", a: "Protected EAP" },
+                    { q: "Apa EAP-FAST?", a: "Flexible Authentication" },
+                    { q: "Apa LEAP?", a: "Lightweight EAP" },
+                    { q: "Apa MAC authentication?", a: "MAC filter" },
+                    { q: "Apa captive portal?", a: "Web login" },
+                    { q: "Apa WPS?", a: "Wi-Fi Protected Setup" },
+                    { q: "Apa PIN method WPS?", a: "8 digit PIN" },
+                    { q: "Apa push button WPS?", a: "Button press" },
+                    { q: "Apa NFC WPS?", a: "Near Field" },
+                    { q: "Apa Bluetooth security?", a: "Pairing PIN" },
+                    { q: "Apa Zigbee security?", a: "AES-128" },
+                    { q: "Apa Z-Wave security?", a: "S2 framework" },
+                    { q: "Apa LoRa security?", a: "AES-128" },
+                    { q: "Apa Sigfox security?", a: "Sequence number" },
+                    { q: "Apa NB-IoT security?", a: "3GPP" },
+                    { q: "Apa LTE-M security?", a: "SIM based" },
+                    { q: "Apa 5G security?", a: "SUPI, SUCI" },
+                    { q: "Apa SEAF?", a: "Security Anchor Function" },
+                    { q: "Apa AUSF?", a: "Authentication Server Function" },
+                    { q: "Apa key derivation?", a: "KDF" },
+                    { q: "Apa mutual authentication?", a: "Both sides verify" },
+                    { q: "Apa forward secrecy?", a: "New keys per session" },
+                    { q: "Apa replay attack?", a: "Repeat message" },
+                    { q: "Apa man-in-middle?", a: "Intercept" },
+                    { q: "Apa evil twin attack?", a: "Fake AP" },
+                    { q: "Apa deauth flood?", a: "DoS" },
+                    { q: "Apa KRACK?", a: "Key Reinstallation Attack" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa key length WEP?", a: "40/104 bits" },
+                    { q: "Apa WPA TKIP?", a: "RC4 improved" },
+                    { q: "Apa WPA2 CCMP?", a: "AES" },
+                    { q: "Apa WPA3 enhancements?", a: "SAE, OWE" },
+                    { q: "Apa open system auth?", a: "No security" },
+                    { q: "Apa shared key auth?", a: "Challenge response" },
+                    { q: "Apa personal WPA?", a: "PSK" },
+                    { q: "Apa enterprise WPA?", a: "802.1X" },
+                    { q: "Apa RADIUS protocols?", a: "EAP" },
+                    { q: "Apa MIC in TKIP?", a: "Message Integrity Code" },
+                    { q: "Apa CCM mode?", a: "Counter with CBC-MAC" },
+                    { q: "Apa IV length WEP?", a: "24 bits" },
+                    { q: "Apa IV reuse vulnerability?", a: "Key recovery" },
+                    { q: "Apa Dragonfly handshake?", a: "SAE" },
+                    { q: "Apa enhanced open?", a: "OWE" },
+                    { q: "Apa EAP process?", a: "Identity, method, decision" },
+                    { q: "Apa EAPOL?", a: "EAP over LAN" },
+                    { q: "Apa controlled port?", a: "After auth" },
+                    { q: "Apa uncontrolled port?", a: "Auth traffic" },
+                    { q: "Apa EAP-TLS requirement?", a: "Client cert" },
+                    { q: "Apa EAP-TTLS?", a: "Server cert only" },
+                    { q: "Apa PEAP MSCHAPv2?", a: "Password based" },
+                    { q: "Apa EAP-FAST PAC?", a: "Protected Access Credential" },
+                    { q: "Apa LEAP vulnerability?", a: "Dictionary attack" },
+                    { q: "Apa MAC spoofing?", a: "Change MAC" },
+                    { q: "Apa captive portal bypass?", a: "DNS tunneling" },
+                    { q: "Apa WPS brute force?", a: "PIN attack" },
+                    { q: "Apa Pixie Dust attack?", a: "WPS vuln" },
+                    { q: "Apa Reaver?", a: "WPS tool" },
+                    { q: "Apa Bluetooth pairing modes?", a: "Numeric, passkey" },
+                    { q: "Apa Zigbee network key?", a: "Shared key" },
+                    { q: "Apa Z-Wave S2 classes?", a: "Unauth, auth, access" },
+                    { q: "Apa LoRa join accept?", a: "DevNonce" },
+                    { q: "Apa Sigfox seq number?", a: "Replay protection" },
+                    { q: "Apa NB-IoT AKA?", a: "Authentication and Key Agreement" },
+                    { q: "Apa LTE-M integrity?", a: "EIA" },
+                    { q: "Apa 5G AKA?", a: "5G-AKA" },
+                    { q: "Apa SUPI concealment?", a: "SUCI" },
+                    { q: "Apa AUSF role?", a: "Anchor key" },
+                    { q: "Apa KDF in 5G?", a: "HMAC-SHA256" },
+                    { q: "Apa PFS in WPA3?", a: "Per session" },
+                    { q: "Apa session resumption?", a: "Ticket" },
+                    { q: "Apa nonce in encryption?", a: "Unique IV" },
+                    { q: "Apa salt in hashing?", a: "Prevent rainbow" },
+                    { q: "Apa wardriving?", a: "Scan AP" },
+                    { q: "Apa warchalking?", a: "Mark open Wi-Fi" },
+                    { q: "Apa KRACK vuln?", a: "WPA2 handshake" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa WEP RC4 key size?", a: "64/128 bits" },
+                    { q: "Apa WPA MIC algorithm?", a: "Michael" },
+                    { q: "Apa WPA2 mandatory?", a: "AES-CCMP" },
+                    { q: "Apa WPA3 192-bit mode?", a: "Enterprise" },
+                    { q: "Apa open auth frame?", a: "2 frames" },
+                    { q: "Apa shared key frame?", a: "4 frames" },
+                    { q: "Apa PMK in PSK?", a: "From passphrase" },
+                    { q: "Apa PTK?", a: "Pairwise Transient Key" },
+                    { q: "Apa GTK?", a: "Group Temporal Key" },
+                    { q: "Apa 4-way handshake?", a: "Key confirmation" },
+                    { q: "Apa ANonce?", a: "AP nonce" },
+                    { q: "Apa SNonce?", a: "Supplicant nonce" },
+                    { q: "Apa MIC in handshake?", a: "Integrity check" },
+                    { q: "Apa PMF?", a: "Protected Management Frames" },
+                    { q: "Apa MFP?", a: "Management Frame Protection" },
+                    { q: "Apa EAP identity?", a: "Outer ID" },
+                    { q: "Apa EAP method?", a: "Inner auth" },
+                    { q: "Apa MSK?", a: "Master Session Key" },
+                    { q: "Apa PMK from EAP?", a: "From MSK" },
+                    { q: "Apa EAP-TLS handshake?", a: "Mutual cert" },
+                    { q: "Apa EAP-TTLS inner?", a: "MSCHAP" },
+                    { q: "Apa PEAP phase 1?", a: "Server TLS" },
+                    { q: "Apa phase 2 PEAP?", a: "Client auth" },
+                    { q: "Apa EAP-FAST phase 0?", a: "PAC provisioning" },
+                    { q: "Apa LEAP?", a: "Cisco proprietary" },
+                    { q: "Apa MAC auth bypass?", a: "Fallback 802.1X" },
+                    { q: "Apa web auth?", a: "Captive portal" },
+                    { q: "Apa WPS registrar?", a: "AP" },
+                    { q: "Apa WPS enrollee?", a: "Client" },
+                    { q: "Apa Reaver attack?", a: "Brute PIN" },
+                    { q: "Apa Bluetooth SSP?", a: "Secure Simple Pairing" },
+                    { q: "Apa Zigbee install code?", a: "Join key" },
+                    { q: "Apa Z-Wave QR code?", a: "S2 inclusion" },
+                    { q: "Apa LoRa OTAA?", a: "Over The Air Activation" },
+                    { q: "Apa ABP?", a: "Activation By Personalization" },
+                    { q: "Apa NB-IoT EPS AKA?", a: "Evolved Packet System" },
+                    { q: "Apa LTE-M mutual auth?", a: "USIM" },
+                    { q: "Apa 5G home control?", a: "HN key" },
+                    { q: "Apa SEAF anchor?", a: "K_SEAF" },
+                    { q: "Apa AUSF K_AUSF?", a: "Intermediate key" },
+                    { q: "Apa HKDF?", a: "HMAC Key Derivation" },
+                    { q: "Apa PFS with Diffie-Hellman?", a: "Ephemeral keys" },
+                    { q: "Apa ticket in Kerberos?", a: "Session ticket" },
+                    { q: "Apa nonce reuse?", a: "Cryptanalysis" },
+                    { q: "Apa PBKDF2?", a: "Password Based Key Derivation" },
+                    { q: "Apa war driving tools?", a: "Netstumbler" },
+                    { q: "Apa Aircrack-ng?", a: "Wi-Fi cracking" },
+                    { q: "Apa KRACK fix?", a: "Patch WPA2" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa WEP IV collision?", a: "24 bit repeat" },
+                    { q: "Apa WPA TKIP countermeasure?", a: "60 sec lock" },
+                    { q: "Apa WPA2 KRACK vuln?", a: "Nonce reuse" },
+                    { q: "Apa WPA3 dragonblood?", a: "Downgrade attack" },
+                    { q: "Apa open auth OID?", a: "1.3.6.1" },
+                    { q: "Apa shared key challenge?", a: "128 bit random" },
+                    { q: "Apa PMK caching?", a: "Fast roam" },
+                    { q: "Apa PTK derivation?", a: "PRF" },
+                    { q: "Apa GTK rotation?", a: "Broadcast key" },
+                    { q: "Apa message 1 handshake?", a: "ANonce" },
+                    { q: "Apa message 2?", a: "SNonce, MIC" },
+                    { q: "Apa message 3?", a: "GTK, MIC" },
+                    { q: "Apa message 4?", a: "ACK MIC" },
+                    { q: "Apa 802.11w?", a: "PMF" },
+                    { q: "Apa mandatory PMF?", a: "WPA3" },
+                    { q: "Apa EAP success?", a: "Code 3" },
+                    { q: "Apa EAP failure?", a: "Code 4" },
+                    { q: "Apa EAPOL start?", a: "Client initiate" },
+                    { q: "Apa EAPOL key?", a: "4-way" },
+                    { q: "Apa EAP-TLS code?", a: "13" },
+                    { q: "Apa EAP-TTLS code?", a: "21" },
+                    { q: "Apa PEAP code?", a: "25" },
+                    { q: "Apa EAP-FAST code?", a: "43" },
+                    { q: "Apa LEAP code?", a: "17" },
+                    { q: "Apa MAB?", a: "MAC Auth Bypass" },
+                    { q: "Apa central web auth?", a: "ISE" },
+                    { q: "Apa WPS offline attack?", a: "Pixie Dust" },
+                    { q: "Apa WPS PIN halves?", a: "4 + 3 digits" },
+                    { q: "Apa Bluetooth LE secure connections?", a: "ECDH" },
+                    { q: "Apa Zigbee trust center?", a: "Key distribution" },
+                    { q: "Apa Z-Wave S2 bootstrapping?", a: "Out of band" },
+                    { q: "Apa LoRa AppKey?", a: "Root key" },
+                    { q: "Apa Sigfox authenticator?", a: "MAC" },
+                    { q: "Apa NB-IoT integrity algorithm?", a: "EIA1" },
+                    { q: "Apa LTE-M encryption?", a: "EEA" },
+                    { q: "Apa 5G SEPP?", a: "Security Edge Protection Proxy" },
+                    { q: "Apa SIDF?", a: "SUPI De-concealment" },
+                    { q: "Apa UDM?", a: "Unified Data Management" },
+                    { q: "Apa K_AMF?", a: "Access and Mobility key" },
+                    { q: "Apa ECDHE?", a: "Elliptic Curve Diffie-Hellman Ephemeral" },
+                    { q: "Apa resumption PSK?", a: "0-RTT" },
+                    { q: "Apa CTR mode?", a: "Counter encryption" },
+                    { q: "Apa argon2?", a: "Memory hard hash" },
+                    { q: "Apa wips sensor?", a: "Detect rogue" },
+                    { q: "Apa Fern WiFi cracker?", a: "WEP/WPA tool" },
+                    { q: "Apa WPA3 transition mode?", a: "Backward compat" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "WPA3") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: WPA3.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: WEP, WPA, WPA2, WPA3, open/shared auth.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: PSK, EAP, TKIP, AES, handshake.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: SAE, OWE, EAP methods, attacks.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Advanced keys, 5G security, vulns fixes.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
