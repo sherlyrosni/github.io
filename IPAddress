@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - IP</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>IP Addressing</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa subnet mask untuk /26?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu IP address?", a: "Alamat unik perangkat" },
+                    { q: "Berapa bit IPv4?", a: "32" },
+                    { q: "Apa class A range?", a: "1-126" },
+                    { q: "Apa private IP class A?", a: "10.0.0.0" },
+                    { q: "Apa subnet mask class C?", a: "255.255.255.0" },
+                    { q: "Apa loopback IP?", a: "127.0.0.1" },
+                    { q: "Apa broadcast IP?", a: "255.255.255.255" },
+                    { q: "Apa default gateway?", a: "Router IP" },
+                    { q: "Apa IPv6 bit?", a: "128" },
+                    { q: "Apa APIPA range?", a: "169.254.0.0" },
+                    { q: "Apa network ID?", a: "Bagian jaringan IP" },
+                    { q: "Apa host ID?", a: "Bagian host IP" },
+                    { q: "Apa CIDR?", a: "Classless Inter-Domain Routing" },
+                    { q: "Apa /24 mask?", a: "255.255.255.0" },
+                    { q: "Apa class B range?", a: "128-191" },
+                    { q: "Apa class C range?", a: "192-223" },
+                    { q: "Apa class D for?", a: "Multicast" },
+                    { q: "Apa IPv4 format?", a: "Dotted decimal" },
+                    { q: "Apa IPv6 format?", a: "Colon hexa" },
+                    { q: "Apa anycast?", a: "Nearest node" },
+                    { q: "Apa multicast?", a: "Group" },
+                    { q: "Apa unicast?", a: "One to one" },
+                    { q: "Apa public IP?", a: "Internet routable" },
+                    { q: "Apa private IP?", a: "Internal network" },
+                    { q: "Apa NAT?", a: "Network Address Translation" },
+                    { q: "Apa PAT?", a: "Port Address Translation" },
+                    { q: "Apa static IP?", a: "Manual assignment" },
+                    { q: "Apa dynamic IP?", a: "DHCP" },
+                    { q: "Apa DHCP server?", a: "Assign IP" },
+                    { q: "Apa lease time?", a: "Durasi IP" },
+                    { q: "Apa scope DHCP?", a: "Range IP" },
+                    { q: "Apa reservation DHCP?", a: "Fixed MAC to IP" },
+                    { q: "Apa exclusion DHCP?", a: "IP tidak assign" },
+                    { q: "Apa relay DHCP?", a: "Forward request" },
+                    { q: "Apa DORA process?", a: "Discover Offer Request Ack" },
+                    { q: "Apa IPv6 link local?", a: "FE80::" },
+                    { q: "Apa global unicast?", a: "2000::/3" },
+                    { q: "Apa unique local?", a: "FC00::/7" },
+                    { q: "Apa EUI-64?", a: "Auto MAC to IPv6" },
+                    { q: "Apa SLAAC?", a: "Stateless Autoconfig" },
+                    { q: "Apa stateful DHCPv6?", a: "With server" },
+                    { q: "Apa RS message?", a: "Router Solicitation" },
+                    { q: "Apa RA message?", a: "Router Advertisement" },
+                    { q: "Apa NS message?", a: "Neighbor Solicitation" },
+                    { q: "Apa NA message?", a: "Neighbor Advertisement" },
+                    { q: "Apa ICMPv6?", a: "IPv6 control" },
+                    { q: "Apa MLD?", a: "Multicast Listener Discovery" },
+                    { q: "Apa NDP?", a: "Neighbor Discovery Protocol" },
+                    { q: "Apa IPv4 to IPv6 tunnel?", a: "6to4" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa subnetting?", a: "Bagi jaringan" },
+                    { q: "Apa VLSM?", a: "Variable Length Subnet Mask" },
+                    { q: "Apa supernetting?", a: "Gabung subnet" },
+                    { q: "Apa /20 mask?", a: "255.255.240.0" },
+                    { q: "Apa hosts in /24?", a: "254" },
+                    { q: "Apa network address 192.168.1.65/26?", a: "192.168.1.64" },
+                    { q: "Apa broadcast /26?", a: "Last IP" },
+                    { q: "Apa first usable IP?", a: "Network +1" },
+                    { q: "Apa last usable IP?", a: "Broadcast -1" },
+                    { q: "Apa subnet bits?", a: "Borrow from host" },
+                    { q: "Apa FLSM?", a: "Fixed Length Subnet Mask" },
+                    { q: "Apa summarization?", a: "Route aggregate" },
+                    { q: "Apa private class B?", a: "172.16.0.0 - 172.31.0.0" },
+                    { q: "Apa private class C?", a: "192.168.0.0" },
+                    { q: "Apa 127.0.0.0?", a: "Loopback" },
+                    { q: "Apa 0.0.0.0?", a: "Default route" },
+                    { q: "Apa 169.254.0.0?", a: "APIPA" },
+                    { q: "Apa IPv6 anycast?", a: "One to nearest" },
+                    { q: "Apa IPv6 multicast?", a: "FF00::/8" },
+                    { q: "Apa site local?", a: "Deprecated FC00" },
+                    { q: "Apa dual stack?", a: "IPv4 and IPv6" },
+                    { q: "Apa tunneling?", a: "IPv6 over IPv4" },
+                    { q: "Apa NAT64?", a: "Translate IPv6 to IPv4" },
+                    { q: "Apa DHCPv4 port?", a: "67/68" },
+                    { q: "Apa DHCPv6 port?", a: "546/547" },
+                    { q: "Apa BOOTP?", a: "Predecessor DHCP" },
+                    { q: "Apa DHCP discover?", a: "Broadcast request" },
+                    { q: "Apa DHCP offer?", a: "Server proposal" },
+                    { q: "Apa DHCP request?", a: "Client accept" },
+                    { q: "Apa DHCP ack?", a: "Server confirm" },
+                    { q: "Apa DHCP nak?", a: "Negative ack" },
+                    { q: "Apa DHCP decline?", a: "Client reject" },
+                    { q: "Apa DHCP release?", a: "Client release" },
+                    { q: "Apa DHCP inform?", a: "Request info" },
+                    { q: "Apa option 66?", a: "TFTP server" },
+                    { q: "Apa option 67?", a: "Boot file" },
+                    { q: "Apa option 150?", a: "TFTP IP" },
+                    { q: "Apa stateless DHCPv6?", a: "No address, only info" },
+                    { q: "Apa stateful DHCPv6?", a: "Address and info" },
+                    { q: "Apa relay agent IPv6?", a: "DHCPv6 relay" },
+                    { q: "Apa solicitor message?", a: "Client request" },
+                    { q: "Apa advertise message?", a: "Server offer" },
+                    { q: "Apa reply message?", a: "Server confirm" },
+                    { q: "Apa reconfirm message?", a: "Client verify" },
+                    { q: "Apa information request?", a: "Stateless" },
+                    { q: "Apa IPv6 loopback?", a: "::1" },
+                    { q: "Apa unspecified address?", a: "::" },
+                    { q: "Apa compressed IPv6?", a: "Remove zeros" },
+                    { q: "Apa embedded IPv4?", a: "::FFFF:IPv4" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa subnet 192.168.0.0/24 menjadi 4?", a: "/26" },
+                    { q: "Apa subnets in /27?", a: "8" },
+                    { q: "Apa hosts in /28?", a: "14" },
+                    { q: "Apa summary 192.168.1.0 - 192.168.4.0?", a: "192.168.0.0/22" },
+                    { q: "Apa magic number /26?", a: "64" },
+                    { q: "Apa subnet broadcast 192.168.1.128/26?", a: "192.168.1.191" },
+                    { q: "Apa first host 192.168.1.64/26?", a: "192.168.1.65" },
+                    { q: "Apa last host 192.168.1.0/26?", a: "192.168.1.62" },
+                    { q: "Apa borrow bits for 6 subnets?", a: "3" },
+                    { q: "Apa mask for 1024 hosts?", a: "/22" },
+                    { q: "Apa VLSM advantage?", a: "Efisien IP" },
+                    { q: "Apa supernet mask?", a: "Kurang bit" },
+                    { q: "Apa classless routing?", a: "CIDR support" },
+                    { q: "Apa discontiguous network?", a: "Separated subnets" },
+                    { q: "Apa auto-summary?", a: "Classful boundary" },
+                    { q: "Apa no ip classless?", a: "Classful routing" },
+                    { q: "Apa IPv6 global prefix?", a: "48 bits" },
+                    { q: "Apa subnet ID IPv6?", a: "16 bits" },
+                    { q: "Apa interface ID?", a: "64 bits" },
+                    { q: "Apa modified EUI-64?", a: "FFFE insert" },
+                    { q: "Apa privacy extension?", a: "Random interface" },
+                    { q: "Apa temporary IPv6?", a: "Privacy" },
+                    { q: "Apa 6to4 prefix?", a: "2002::/16" },
+                    { q: "Apa Teredo prefix?", a: "2001::/32" },
+                    { q: "Apa ISATAP?", a: "Intra-Site Automatic" },
+                    { q: "Apa DHCP scope options?", a: "DNS, gateway" },
+                    { q: "Apa superscope?", a: "Gabung scope" },
+                    { q: "Apa multicast scope?", a: "MADCAP" },
+                    { q: "Apa DHCP failover?", a: "Hot standby" },
+                    { q: "Apa load balance DHCP?", a: "50/50" },
+                    { q: "Apa name protection DHCP?", a: "DNS secure" },
+                    { q: "Apa DHCP filter?", a: "Allow/deny MAC" },
+                    { q: "Apa vendor class?", a: "Custom options" },
+                    { q: "Apa user class?", a: "Group options" },
+                    { q: "Apa option 82?", a: "Relay info" },
+                    { q: "Apa DHCP snooping?", a: "Prevent rogue" },
+                    { q: "Apa ip helper-address?", a: "Relay UDP" },
+                    { q: "Apa ND in IPv6?", a: "Neighbor Discovery" },
+                    { q: "Apa DAD?", a: "Duplicate Address Detection" },
+                    { q: "Apa M flag in RA?", a: "Managed address" },
+                    { q: "Apa O flag in RA?", a: "Other config" },
+                    { q: "Apa A flag in RA?", a: "Autoconfig" },
+                    { q: "Apa prefix info in RA?", a: "Network prefix" },
+                    { q: "Apa router lifetime?", a: "Default router" },
+                    { q: "Apa hop limit in RA?", a: "IPv6 hop" },
+                    { q: "Apa reachable time?", a: "Neighbor reach" },
+                    { q: "Apa retrans timer?", a: "NS interval" },
+                    { q: "Apa MTU in RA?", a: "Link MTU" },
+                    { q: "Apa source link-layer?", a: "MAC in RA" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa subnets for 192.168.0.0/24 to 8 subnets?", a: "/27" },
+                    { q: "Apa hosts for /29?", a: "6" },
+                    { q: "Apa summary for 172.16.0.0/22, /23, /24?", a: "172.16.0.0/21" },
+                    { q: "Apa block size /28?", a: "16" },
+                    { q: "Apa subnet 10.0.0.0/8 to /12?", a: "16 subnets" },
+                    { q: "Apa VLSM example?", a: "Different mask per subnet" },
+                    { q: "Apa route summarization benefit?", a: "Reduce table size" },
+                    { q: "Apa discontiguous issue?", a: "No auto-summary" },
+                    { q: "Apa classful protocol?", a: "RIPv1" },
+                    { q: "Apa IPv6 compressed rule?", a: "Zero suppression" },
+                    { q: "Apa leading zero omit?", a: "In hexa group" },
+                    { q: "Apa EUI-64 flip bit?", a: "7th bit" },
+                    { q: "Apa privacy extension lifetime?", a: "Temporary" },
+                    { q: "Apa 6to4 tunnel IP?", a: "2002:IPv4::/48" },
+                    { q: "Apa Teredo server?", a: "Tunnel endpoint" },
+                    { q: "Apa ISATAP router?", a: "Dual stack" },
+                    { q: "Apa DHCPv4 message types?", a: "8 types" },
+                    { q: "Apa DHCPDISCOVER code?", a: "Bootp" },
+                    { q: "Apa option 1?", a: "Subnet mask" },
+                    { q: "Apa option 3?", a: "Router" },
+                    { q: "Apa option 6?", a: "DNS" },
+                    { q: "Apa option 15?", a: "Domain name" },
+                    { q: "Apa option 51?", a: "Lease time" },
+                    { q: "Apa option 53?", a: "Message type" },
+                    { q: "Apa option 54?", a: "Server ID" },
+                    { q: "Apa option 61?", a: "Client ID" },
+                    { q: "Apa DHCP snooping table?", a: "Binding" },
+                    { q: "Apa ip dhcp snooping trust?", a: "Trusted port" },
+                    { q: "Apa rate limit DHCP?", a: "Prevent DoS" },
+                    { q: "Apa ND snooping?", a: "IPv6 binding" },
+                    { q: "Apa RA guard?", a: "Block rogue RA" },
+                    { q: "Apa DAI?", a: "Dynamic ARP Inspection" },
+                    { q: "Apa IPv6 first-hop security?", a: "FHS" },
+                    { q: "Apa source guard?", a: "IP source binding" },
+                    { q: "Apa MLD snooping?", a: "Multicast IPv6" },
+                    { q: "Apa IPv6 address types?", a: "Unicast, multicast, anycast" },
+                    { q: "Apa solicited-node multicast?", a: "FF02::1:FFxx:xxxx" },
+                    { q: "Apa all-nodes multicast?", a: "FF02::1" },
+                    { q: "Apa all-routers multicast?", a: "FF02::2" },
+                    { q: "Apa DHCPv6 solicit code?", a: "1" },
+                    { q: "Apa advertise code?", a: "2" },
+                    { q: "Apa request code?", a: "3" },
+                    { q: "Apa reply code?", a: "7" },
+                    { q: "Apa reconfirm code?", a: "4" },
+                    { q: "Apa release code?", a: "8" },
+                    { q: "Apa decline code?", a: "9" },
+                    { q: "Apa information-request code?", a: "11" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "255.255.255.192") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: 255.255.255.192.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: IP classes, private ranges, loopback.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Subnetting, VLSM, CIDR, DHCP process.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Summary, IPv6 types, DHCP options.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Advanced subnet, IPv6 messages, security features.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
