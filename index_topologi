@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Topologi Jaringan</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Topologi Jaringan</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa topologi yang paling tahan kegagalan?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu topologi bus?", a: "Satu kabel utama" },
+                    { q: "Apa itu topologi star?", a: "Central hub" },
+                    { q: "Apa itu topologi ring?", a: "Lingkaran" },
+                    { q: "Apa itu topologi mesh?", a: "Semua terhubung" },
+                    { q: "Apa itu topologi tree?", a: "Hirarkis" },
+                    { q: "Apa itu topologi hybrid?", a: "Campuran" },
+                    { q: "Apa kelebihan bus?", a: "Murah" },
+                    { q: "Apa kekurangan bus?", a: "Kegagalan kabel" },
+                    { q: "Apa kelebihan star?", a: "Mudah troubleshoot" },
+                    { q: "Apa kekurangan star?", a: "Central failure" },
+                    { q: "Apa kelebihan ring?", a: "Data unidirectional" },
+                    { q: "Apa kekurangan ring?", a: "Single point failure" },
+                    { q: "Apa kelebihan mesh?", a: "Redundant" },
+                    { q: "Apa kekurangan mesh?", a: "Mahal" },
+                    { q: "Apa kelebihan tree?", a: "Scalable" },
+                    { q: "Apa kekurangan tree?", a: "Complex" },
+                    { q: "Apa terminator in bus?", a: "Prevent reflection" },
+                    { q: "Apa hub in star?", a: "Central device" },
+                    { q: "Apa token in ring?", a: "Access control" },
+                    { q: "Apa full mesh formula?", a: "n(n-1)/2" },
+                    { q: "Apa partial mesh?", a: "Not all connected" },
+                    { q: "Apa physical topology?", a: "Actual layout" },
+                    { q: "Apa logical topology?", a: "Data flow" },
+                    { q: "Apa point-to-point?", a: "Two nodes" },
+                    { q: "Apa multipoint?", a: "Many nodes" },
+                    { q: "Apa bus media?", a: "Coaxial" },
+                    { q: "Apa star media?", a: "UTP" },
+                    { q: "Apa ring media?", a: "Fiber" },
+                    { q: "Apa mesh media?", a: "Wireless" },
+                    { q: "Apa tree root?", a: "Core switch" },
+                    { q: "Apa hybrid example?", a: "Star-bus" },
+                    { q: "Apa collision in bus?", a: "CSMA/CD" },
+                    { q: "Apa no collision in star?", a: "Switch" },
+                    { q: "Apa unidirectional ring?", a: "Data one way" },
+                    { q: "Apa bidirectional ring?", a: "SONET" },
+                    { q: "Apa redundancy in mesh?", a: "Multiple paths" },
+                    { q: "Apa scalability in tree?", a: "Hierarchical" },
+                    { q: "Apa cost in bus?", a: "Low" },
+                    { q: "Apa cost in mesh?", a: "High" },
+                    { q: "Apa ease installation star?", a: "Easy" },
+                    { q: "Apa ease installation ring?", a: "Moderate" },
+                    { q: "Apa failure impact bus?", a: "Whole network" },
+                    { q: "Apa failure impact star?", a: "Single device" },
+                    { q: "Apa FDDI?", a: "Fiber Distributed Data Interface" },
+                    { q: "Apa token ring?", a: "802.5" },
+                    { q: "Apa Ethernet star?", a: "802.3" },
+                    { q: "Apa wireless mesh?", a: "802.11s" },
+                    { q: "Apa backbone in tree?", a: "High speed link" },
+                    { q: "Apa VLAN in hybrid?", a: "Logical separation" },
+                    { q: "Apa STP in topology?", a: "Loop prevention" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa broadcast domain in bus?", a: "All nodes" },
+                    { q: "Apa collision domain in star?", a: "Per port" },
+                    { q: "Apa token passing in ring?", a: "Access method" },
+                    { q: "Apa routing in mesh?", a: "Dynamic path" },
+                    { q: "Apa spanning tree in tree?", a: "Prevent loop" },
+                    { q: "Apa cost hybrid?", a: "Variable" },
+                    { q: "Apa advantage partial mesh?", a: "Balance cost redundancy" },
+                    { q: "Apa disadvantage full mesh?", a: "Complexity n(n-1)/2" },
+                    { q: "Apa bus termination?", a: "50 ohm resistor" },
+                    { q: "Apa daisy chain in bus?", a: "Serial connection" },
+                    { q: "Apa central point star?", a: "Switch/hub" },
+                    { q: "Apa monitor station in ring?", a: "Manage token" },
+                    { q: "Apa self-healing ring?", a: "Dual ring" },
+                    { q: "Apa load balancing in mesh?", a: "Multiple links" },
+                    { q: "Apa leaf node in tree?", a: "End device" },
+                    { q: "Apa logical ring in physical star?", a: "Token ring hub" },
+                    { q: "Apa physical bus logical bus?", a: "Coaxial" },
+                    { q: "Apa wireless topology?", a: "Ad hoc/infrastructure" },
+                    { q: "Apa BSS in wireless?", a: "Basic Service Set" },
+                    { q: "Apa ESS?", a: "Extended Service Set" },
+                    { q: "Apa IBSS?", a: "Ad hoc" },
+                    { q: "Apa star-bus hybrid?", a: "Common LAN" },
+                    { q: "Apa ring-mesh hybrid?", a: "High reliability" },
+                    { q: "Apa performance bus?", a: "Degrades with traffic" },
+                    { q: "Apa performance star?", a: "Better with switch" },
+                    { q: "Apa performance ring?", a: "Predictable" },
+                    { q: "Apa performance mesh?", a: "High" },
+                    { q: "Apa performance tree?", a: "Scalable" },
+                    { q: "Apa cabling bus?", a: "Single" },
+                    { q: "Apa cabling star?", a: "Radial" },
+                    { q: "Apa cabling ring?", a: "Closed loop" },
+                    { q: "Apa cabling mesh?", a: "Multiple" },
+                    { q: "Apa cabling tree?", a: "Branching" },
+                    { q: "Apa troubleshooting bus?", a: "Hard" },
+                    { q: "Apa troubleshooting star?", a: "Easy" },
+                    { q: "Apa troubleshooting ring?", a: "Moderate" },
+                    { q: "Apa troubleshooting mesh?", a: "Complex" },
+                    { q: "Apa troubleshooting tree?", a: "Hierarchical" },
+                    { q: "Apa expansion bus?", a: "Add drop" },
+                    { q: "Apa expansion star?", a: "Add port" },
+                    { q: "Apa expansion ring?", a: "Break loop" },
+                    { q: "Apa expansion mesh?", a: "Add links" },
+                    { q: "Apa expansion tree?", a: "Add branch" },
+                    { q: "Apa 802.3 bus?", a: "10BASE2" },
+                    { q: "Apa 802.5 ring?", a: "Token ring" },
+                    { q: "Apa SONET ring?", a: "Optical ring" },
+                    { q: "Apa WMN?", a: "Wireless Mesh Network" },
+                    { q: "Apa core-distribution-access?", a: "Tree model" },
+                    { q: "Apa collapsed core?", a: "Two-tier tree" },
+                    { q: "Apa RSTP?", a: "Rapid STP" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa STP convergence?", a: "50 seconds" },
+                    { q: "Apa RSTP convergence?", a: "Few seconds" },
+                    { q: "Apa MSTP?", a: "Multiple Spanning Tree" },
+                    { q: "Apa PVST?", a: "Per VLAN STP" },
+                    { q: "Apa root bridge?", a: "Lowest BID" },
+                    { q: "Apa port cost?", a: "Speed based" },
+                    { q: "Apa blocking port?", a: "Prevent loop" },
+                    { q: "Apa root port?", a: "Lowest cost to root" },
+                    { q: "Apa designated port?", a: "Forwarding per segment" },
+                    { q: "Apa alternate port?", a: "Backup root" },
+                    { q: "Apa backup port?", a: "Backup designated" },
+                    { q: "Apa BPDU?", a: "Bridge Protocol Data Unit" },
+                    { q: "Apa TCN BPDU?", a: "Topology Change" },
+                    { q: "Apa max age timer?", a: "20 seconds" },
+                    { q: "Apa hello timer?", a: "2 seconds" },
+                    { q: "Apa forward delay?", a: "15 seconds" },
+                    { q: "Apa listening state?", a: "Learn BPDU" },
+                    { q: "Apa learning state?", a: "Learn MAC" },
+                    { q: "Apa forwarding state?", a: "Active" },
+                    { q: "Apa disabled state?", a: "Admin down" },
+                    { q: "Apa portfast?", a: "Immediate forward" },
+                    { q: "Apa BPDU guard?", a: "Shutdown if BPDU" },
+                    { q: "Apa root guard?", a: "Ignore superior BPDU" },
+                    { q: "Apa loop guard?", a: "Block if no BPDU" },
+                    { q: "Apa UDLD?", a: "Unidirectional Link Detection" },
+                    { q: "Apa FlexLink?", a: "Backup link" },
+                    { q: "Apa EtherChannel?", a: "Link aggregation" },
+                    { q: "Apa PAgP?", a: "Cisco port channel" },
+                    { q: "Apa LACP?", a: "802.3ad" },
+                    { q: "Apa load balance EtherChannel?", a: "Hash src/dst" },
+                    { q: "Apa max links EtherChannel?", a: "8" },
+                    { q: "Apa VLAN trunk?", a: "802.1Q" },
+                    { q: "Apa ISL?", a: "Cisco trunk" },
+                    { q: "Apa VTP?", a: "VLAN Trunk Protocol" },
+                    { q: "Apa VTP modes?", a: "Server, client, transparent" },
+                    { q: "Apa VTP pruning?", a: "Reduce broadcast" },
+                    { q: "Apa DTP?", a: "Dynamic Trunk Protocol" },
+                    { q: "Apa access port?", a: "Single VLAN" },
+                    { q: "Apa trunk port?", a: "Multiple VLAN" },
+                    { q: "Apa voice VLAN?", a: "Auxiliary VLAN" },
+                    { q: "Apa native VLAN?", a: "Untagged" },
+                    { q: "Apa VLAN range?", a: "1-4094" },
+                    { q: "Apa extended VLAN?", a: "1006-4094" },
+                    { q: "Apa VLAN 1?", a: "Default" },
+                    { q: "Apa VLAN 1002-1005?", a: "FDDI Token Ring" },
+                    { q: "Apa PVLAN?", a: "Private VLAN" },
+                    { q: "Apa primary PVLAN?", a: "Main VLAN" },
+                    { q: "Apa isolated PVLAN?", a: "No communication" },
+                    { q: "Apa community PVLAN?", a: "Group communication" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa bridge ID format?", a: "Priority + MAC" },
+                    { q: "Apa extended priority?", a: "4 bit increment" },
+                    { q: "Apa port ID?", a: "Priority + number" },
+                    { q: "Apa tie breaker in root port?", a: "Lowest sender BID" },
+                    { q: "Apa configuration BPDU?", a: "Root sends" },
+                    { q: "Apa topology change notification?", a: "To root" },
+                    { q: "Apa TCA?", a: "Topology Change Ack" },
+                    { q: "Apa max age calculation?", a: "Diameter * hello" },
+                    { q: "Apa RSTP port roles?", a: "Root, designated, alternate" },
+                    { q: "Apa edge port RSTP?", a: "Portfast" },
+                    { q: "Apa proposal agreement?", a: "Sync in RSTP" },
+                    { q: "Apa MST instances?", a: "Multiple trees" },
+                    { q: "Apa PVST+?", a: "Cisco per VLAN" },
+                    { q: "Apa RPVST+?", a: "Rapid per VLAN" },
+                    { q: "Apa UplinkFast?", a: "Alternate port fast" },
+                    { q: "Apa BackboneFast?", a: "Indirect failure" },
+                    { q: "Apa BPDU filter?", a: "Ignore BPDU" },
+                    { q: "Apa aggressive UDLD?", a: "Shutdown unidirectional" },
+                    { q: "Apa EtherChannel misconfig guard?", a: "Prevent mismatch" },
+                    { q: "Apa PAgP modes?", a: "Auto, desirable" },
+                    { q: "Apa LACP modes?", a: "Passive, active" },
+                    { q: "Apa EtherChannel load balance?", a: "Src-mac, dst-ip etc." },
+                    { q: "Apa max EtherChannel groups?", a: "64" },
+                    { q: "Apa 802.1Q tag?", a: "4 bytes" },
+                    { q: "Apa TPID?", a: "0x8100" },
+                    { q: "Apa TCI?", a: "Priority, CFI, VID" },
+                    { q: "Apa CoS priority?", a: "3 bits" },
+                    { q: "Apa VID range?", a: "12 bits" },
+                    { q: "Apa double tagging?", a: "QinQ" },
+                    { q: "Apa VTP version 3?", a: "PVLAN support" },
+                    { q: "Apa VTP password?", a: "MD5" },
+                    { q: "Apa VTP domain?", a: "Case sensitive" },
+                    { q: "Apa VTP revision number?", a: "Higher wins" },
+                    { q: "Apa DTP modes?", a: "Dynamic auto, desirable" },
+                    { q: "Apa trunk allowed VLAN?", a: "Filter VLAN" },
+                    { q: "Apa voice VLAN command?", a: "switchport voice vlan" },
+                    { q: "Apa native VLAN mismatch?", a: "CDP detect" },
+                    { q: "Apa reserved VLAN?", a: "0, 4095" },
+                    { q: "Apa extended VLAN config?", a: "VTP transparent" },
+                    { q: "Apa PVLAN promiscuous port?", a: "Communicate all" },
+                    { q: "Apa isolated port?", a: "Only to promiscuous" },
+                    { q: "Apa community port?", a: "Within community" },
+                    { q: "Apa VTP bomb?", a: "High revision delete VLAN" },
+                    { q: "Apa VLAN hopping?", a: "Double tag attack" },
+                    { q: "Apa switch spoofing?", a: "DTP attack" },
+                    { q: "Apa VLAN ACL?", a: "VACL" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "MESH") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: Mesh.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Bus, star, ring, mesh, tree, hybrid basics.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Advantages, disadvantages, media, troubleshooting.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: STP, RSTP, timers, port roles.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Advanced STP features, EtherChannel, VLAN, VTP, PVLAN.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
