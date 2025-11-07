@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Learning Simulator - Standar Komunikasi Nirkabel</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .hidden { display: none; }
+        .feedback { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .correct { background: #d4edda; }
+        .incorrect { background: #f8d7da; }
+        .level-indicator { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="module">
+        <h2>Standar Komunikasi Nirkabel</h2>
+        <p>Pilih 20 soal acak dari 4 level: 🟦Dasar, 🟨Menengah, 🟩Lanjutan, 🟥Master.</p>
+        <button onclick="startQuiz()">Mulai Kuis</button>
+    </div>
+    <div id="quiz" class="module hidden">
+        <h2>Kuis Pembelajaran</h2>
+        <div id="question"></div>
+        <input type="text" id="answer" placeholder="Jawaban">
+        <button onclick="checkAnswer()">Submit</button>
+        <div id="feedback"></div>
+        <p>Skor: <span id="score">0</span>/20 | Level: <span id="currentLevel"></span></p>
+    </div>
+    <div id="remedial" class="module hidden">
+        <h2>Remedial</h2>
+        <div id="remedialContent"></div>
+        <button onclick="retryQuiz()">Coba Lagi</button>
+    </div>
+    <div id="advanced" class="module hidden">
+        <h2>Advanced</h2>
+        <p>Apa frekuensi 802.11a?: <input type="text" id="advAnswer"> <button onclick="checkAdv()">Submit</button></p>
+        <div id="advFeedback"></div>
+        <button onclick="showCert()">Selesai</button>
+    </div>
+    <div id="certificate" class="module hidden">
+        <h2>Sertifikat</h2>
+        <p>Selamat! Skor Anda: <span id="finalScore"></span>%. Cetak: <button onclick="window.print()">Download PDF</button></p>
+    </div>
+    <script>
+        let currentQ = 0, score = 0, scoresPerLevel = [0, 0, 0, 0];
+        const levels = [
+            { // Level 1: Dasar
+                questions: [
+                    { q: "Apa itu Wi-Fi?", a: "Wireless Fidelity" },
+                    { q: "Apa standar 802.11a?", a: "5GHz" },
+                    { q: "Apa standar 802.11b?", a: "2.4GHz 11Mbps" },
+                    { q: "Apa standar 802.11g?", a: "2.4GHz 54Mbps" },
+                    { q: "Apa standar 802.11n?", a: "MIMO" },
+                    { q: "Apa standar 802.11ac?", a: "Wi-Fi 5" },
+                    { q: "Apa standar 802.11ax?", a: "Wi-Fi 6" },
+                    { q: "Apa Bluetooth standar?", a: "802.15" },
+                    { q: "Apa Zigbee?", a: "Low power mesh" },
+                    { q: "Apa NFC?", a: "Near Field Communication" },
+                    { q: "Apa 2.4GHz channel?", a: "1-11" },
+                    { q: "Apa 5GHz channel?", a: "36-165" },
+                    { q: "Apa SSID?", a: "Network name" },
+                    { q: "Apa BSSID?", a: "MAC AP" },
+                    { q: "Apa ESSID?", a: "Extended SSID" },
+                    { q: "Apa ad hoc mode?", a: "Peer to peer" },
+                    { q: "Apa infrastructure mode?", a: "AP based" },
+                    { q: "Apa BSS?", a: "Basic Service Set" },
+                    { q: "Apa ESS?", a: "Extended Service Set" },
+                    { q: "Apa IBSS?", a: "Independent BSS" },
+                    { q: "Apa Wi-Fi Alliance?", a: "Certification" },
+                    { q: "Apa IEEE 802.11?", a: "WLAN standard" },
+                    { q: "Apa frequency hopping?", a: "Bluetooth" },
+                    { q: "Apa direct sequence?", a: "DSSS" },
+                    { q: "Apa orthogonal multiplexing?", a: "OFDM" },
+                    { q: "Apa channel bonding?", a: "40MHz" },
+                    { q: "Apa beamforming?", a: "Directed signal" },
+                    { q: "Apa MU-MIMO?", a: "Multi user" },
+                    { q: "Apa SU-MIMO?", a: "Single user" },
+                    { q: "Apa 802.15.1?", a: "Bluetooth" },
+                    { q: "Apa 802.15.4?", a: "Zigbee" },
+                    { q: "Apa LoRa?", a: "Long range" },
+                    { q: "Apa Sigfox?", a: "Low data rate" },
+                    { q: "Apa NB-IoT?", a: "Narrowband IoT" },
+                    { q: "Apa LTE-M?", a: "LTE for machines" },
+                    { q: "Apa 5G NR?", a: "New Radio" },
+                    { q: "Apa mmWave?", a: "High frequency" },
+                    { q: "Apa sub-6GHz?", a: "Mid band" },
+                    { q: "Apa low band 5G?", a: "Below 1GHz" },
+                    { q: "Apa Wi-Fi 6E?", a: "6GHz band" },
+                    { q: "Apa Wi-Fi 7?", a: "802.11be" },
+                    { q: "Apa BLE?", a: "Bluetooth Low Energy" },
+                    { q: "Apa Thread?", a: "IPv6 mesh" },
+                    { q: "Apa Z-Wave?", a: "Home automation" },
+                    { q: "Apa RFID?", a: "Radio Frequency ID" },
+                    { q: "Apa UWB?", a: "Ultra Wide Band" },
+                    { q: "Apa IrDA?", a: "Infrared" },
+                    { q: "Apa Li-Fi?", a: "Light Fidelity" },
+                    { q: "Apa HaLow?", a: "802.11ah" }
+                ]
+            },
+            { // Level 2: Menengah
+                questions: [
+                    { q: "Apa kecepatan 802.11a?", a: "54Mbps" },
+                    { q: "Apa kecepatan 802.11b?", a: "11Mbps" },
+                    { q: "Apa kecepatan 802.11g?", a: "54Mbps" },
+                    { q: "Apa kecepatan 802.11n?", a: "600Mbps" },
+                    { q: "Apa kecepatan 802.11ac?", a: "6.9Gbps" },
+                    { q: "Apa kecepatan 802.11ax?", a: "9.6Gbps" },
+                    { q: "Apa Bluetooth version 5?", a: "Low energy" },
+                    { q: "Apa Zigbee range?", a: "10-100m" },
+                    { q: "Apa NFC range?", a: "10cm" },
+                    { q: "Apa non-overlapping channel 2.4GHz?", a: "1,6,11" },
+                    { q: "Apa UNII bands in 5GHz?", a: "1,2,3" },
+                    { q: "Apa hidden SSID?", a: "Not broadcast" },
+                    { q: "Apa MAC filtering?", a: "Allow/deny MAC" },
+                    { q: "Apa roaming in ESS?", a: "Handover AP" },
+                    { q: "Apa beacon frame?", a: "AP advertisement" },
+                    { q: "Apa probe request?", a: "Client search" },
+                    { q: "Apa authentication frame?", a: "Open/WEP" },
+                    { q: "Apa association frame?", a: "Connect AP" },
+                    { q: "Apa deauthentication?", a: "Disconnect" },
+                    { q: "Apa CSMA/CA?", a: "Carrier Sense Multiple Access/Collision Avoidance" },
+                    { q: "Apa RTS/CTS?", a: "Request to Send/Clear to Send" },
+                    { q: "Apa NAV?", a: "Network Allocation Vector" },
+                    { q: "Apa DIFS?", a: "Distributed Inter-Frame Space" },
+                    { q: "Apa SIFS?", a: "Short Inter-Frame Space" },
+                    { q: "Apa ACK frame?", a: "Acknowledgment" },
+                    { q: "Apa fragmentation in Wi-Fi?", a: "Break large frame" },
+                    { q: "Apa power save mode?", a: "PSM" },
+                    { q: "Apa TIM in beacon?", a: "Traffic Indication Map" },
+                    { q: "Apa DTIM?", a: "Delivery TIM" },
+                    { q: "Apa Bluetooth piconet?", a: "Master-slave" },
+                    { q: "Apa scatternet?", a: "Multiple piconet" },
+                    { q: "Apa Zigbee coordinator?", a: "Network starter" },
+                    { q: "Apa router in Zigbee?", a: "Relay" },
+                    { q: "Apa end device Zigbee?", a: "Sensor" },
+                    { q: "Apa LoRa modulation?", a: "Chirp spread spectrum" },
+                    { q: "Apa Sigfox data rate?", a: "100bps" },
+                    { q: "Apa NB-IoT bandwidth?", a: "180kHz" },
+                    { q: "Apa LTE-M category?", a: "Cat-M1" },
+                    { q: "Apa 5G massive MIMO?", a: "Many antennas" },
+                    { q: "Apa small cells?", a: "Low power base" },
+                    { q: "Apa spectrum sharing?", a: "Dynamic" },
+                    { q: "Apa Wi-Fi 6 OFDMA?", a: "Multi-user access" },
+                    { q: "Apa TWT?", a: "Target Wake Time" },
+                    { q: "Apa BLE mesh?", a: "Many-to-many" },
+                    { q: "Apa Thread border router?", a: "Gateway" },
+                    { q: "Apa Z-Wave S2?", a: "Security 2" },
+                    { q: "Apa RFID active?", a: "Battery powered" },
+                    { q: "Apa UWB precision?", a: "Centimeter" }
+                ]
+            },
+            { // Level 3: Lanjutan
+                questions: [
+                    { q: "Apa 802.11a modulation?", a: "OFDM" },
+                    { q: "Apa 802.11b modulation?", a: "DSSS" },
+                    { q: "Apa 802.11g backward?", a: "With b" },
+                    { q: "Apa 802.11n channel?", a: "20/40MHz" },
+                    { q: "Apa 802.11ac wave 2?", a: "MU-MIMO" },
+                    { q: "Apa 802.11ax BSS color?", a: "Interference reduction" },
+                    { q: "Apa Bluetooth 5 range?", a: "240m" },
+                    { q: "Apa Zigbee 3.0?", a: "Unified" },
+                    { q: "Apa NFC modes?", a: "Reader, card, P2P" },
+                    { q: "Apa DFS in 5GHz?", a: "Dynamic Frequency Selection" },
+                    { q: "Apa TPC?", a: "Transmit Power Control" },
+                    { q: "Apa rogue AP?", a: "Unauthorized" },
+                    { q: "Apa evil twin?", a: "Fake SSID" },
+                    { q: "Apa deauth attack?", a: "Disconnect clients" },
+                    { q: "Apa frame types?", a: "Management, control, data" },
+                    { q: "Apa association ID?", a: "AID" },
+                    { q: "Apa hidden node problem?", a: "RTS/CTS solve" },
+                    { q: "Apa exposed node?", a: "Can't transmit" },
+                    { q: "Apa interframe spacing?", a: "Wait times" },
+                    { q: "Apa EIFS?", a: "Extended IFS" },
+                    { q: "Apa backoff timer?", a: "Random wait" },
+                    { q: "Apa contention window?", a: "CWmin to CWmax" },
+                    { q: "Apa QoS in Wi-Fi?", a: "802.11e" },
+                    { q: "Apa EDCA?", a: "Enhanced Distributed Channel Access" },
+                    { q: "Apa HCCA?", a: "Hybrid Coordination" },
+                    { q: "Apa access categories?", a: "Voice, video, best effort, background" },
+                    { q: "Apa AIFS?", a: "Arbitration IFS" },
+                    { q: "Apa Bluetooth SIG?", a: "Standard body" },
+                    { q: "Apa Bluetooth profiles?", a: "A2DP, HSP" },
+                    { q: "Apa Zigbee clusters?", a: "Functional groups" },
+                    { q: "Apa LoRaWAN class A?", a: "Battery save" },
+                    { q: "Apa class B?", a: "Scheduled downlink" },
+                    { q: "Apa class C?", a: "Always listen" },
+                    { q: "Apa Sigfox uplink?", a: "12 bytes" },
+                    { q: "Apa NB-IoT coverage?", a: "Deep indoor" },
+                    { q: "Apa LTE-M PSM?", a: "Power Saving Mode" },
+                    { q: "Apa 5G URLLC?", a: "Ultra Reliable Low Latency" },
+                    { q: "Apa eMBB?", a: "Enhanced Mobile Broadband" },
+                    { q: "Apa mMTC?", a: "Massive Machine Type" },
+                    { q: "Apa Wi-Fi 6 spatial reuse?", a: "BSS coloring" },
+                    { q: "Apa UL/DL OFDMA?", a: "Uplink/downlink" },
+                    { q: "Apa BLE 5.2?", a: "Isochronous channels" },
+                    { q: "Apa Thread 1.3?", a: "Diagnostic" },
+                    { q: "Apa Z-Wave range?", a: "30m" },
+                    { q: "Apa RFID frequency?", a: "LF, HF, UHF" },
+                    { q: "Apa UWB 802.15.4a?", a: "Location" }
+                ]
+            },
+            { // Level 4: Master
+                questions: [
+                    { q: "Apa 802.11a channels?", a: "Non-overlapping 12" },
+                    { q: "Apa 802.11b HR-DSSS?", a: "High Rate" },
+                    { q: "Apa ERP in 802.11g?", a: "Extended Rate Physical" },
+                    { q: "Apa HT in 802.11n?", a: "High Throughput" },
+                    { q: "Apa VHT in 802.11ac?", a: "Very High Throughput" },
+                    { q: "Apa HE in 802.11ax?", a: "High Efficiency" },
+                    { q: "Apa Bluetooth core spec?", a: "5.3" },
+                    { q: "Apa Zigbee PRO?", a: "Stack profile" },
+                    { q: "Apa NFC ISO?", a: "18092" },
+                    { q: "Apa UNII-1?", a: "5.15-5.25GHz" },
+                    { q: "Apa UNII-2A?", a: "5.25-5.35GHz" },
+                    { q: "Apa UNII-2C?", a: "5.47-5.725GHz" },
+                    { q: "Apa UNII-3?", a: "5.725-5.85GHz" },
+                    { q: "Apa UNII-4?", a: "5.85-5.925GHz" },
+                    { q: "Apa rogue detection?", a: "WLC feature" },
+                    { q: "Apa wIPS?", a: "Wireless IPS" },
+                    { q: "Apa frame check sequence?", a: "FCS" },
+                    { q: "Apa duration field?", a: "NAV" },
+                    { q: "Apa sequence control?", a: "Seq + frag" },
+                    { q: "Apa QoS control?", a: "TID, ACK policy" },
+                    { q: "Apa block ACK?", a: "Multiple frames" },
+                    { q: "Apa A-MPDU?", a: "Aggregate MAC Protocol Data Unit" },
+                    { q: "Apa A-MSDU?", a: "Aggregate MAC Service Data Unit" },
+                    { q: "Apa TXOP?", a: "Transmission Opportunity" },
+                    { q: "Apa CWmin for voice?", a: "3" },
+                    { q: "Apa CWmax for background?", a: "1023" },
+                    { q: "Apa Bluetooth LE advertising?", a: "Broadcast" },
+                    { q: "Apa GATT?", a: "Generic Attribute Profile" },
+                    { q: "Apa Zigbee binding?", a: "Endpoint connect" },
+                    { q: "Apa LoRa SF?", a: "Spreading Factor" },
+                    { q: "Apa Sigfox DBM?", a: "Duty cycle 1%" },
+                    { q: "Apa NB-IoT repetition?", a: "Up to 2048" },
+                    { q: "Apa LTE-M eDRX?", a: "Extended Discontinuous Reception" },
+                    { q: "Apa 5G slicing?", a: "Network slice" },
+                    { q: "Apa gNB?", a: "5G base station" },
+                    { q: "Apa NSA 5G?", a: "Non-Standalone" },
+                    { q: "Apa SA 5G?", a: "Standalone" },
+                    { q: "Apa Wi-Fi 6 1024-QAM?", a: "10 bits/symbol" },
+                    { q: "Apa UL MU-MIMO?", a: "Uplink multi-user" },
+                    { q: "Apa BLE audio?", a: "LC3 codec" },
+                    { q: "Apa Thread IP?", a: "6LoWPAN" },
+                    { q: "Apa Z-Wave LR?", a: "Long Range" },
+                    { q: "Apa RFID EPC?", a: "Electronic Product Code" },
+                    { q: "Apa UWB ranging?", a: "ToF" },
+                    { q: "Apa IrDA speed?", a: "Up to 16Mbps" },
+                    { q: "Apa Li-Fi spectrum?", a: "Visible light" },
+                    { q: "Apa HaLow range?", a: "1km" },
+                    { q: "Apa 802.11ad?", a: "60GHz" },
+                    { q: "Apa 802.11ay?", a: "60GHz enhanced" }
+                ]
+            }
+        ];
+        // Script sama
+        function checkAdv() {
+            const ans = document.getElementById('advAnswer').value.trim().toUpperCase();
+            const fb = document.getElementById('advFeedback');
+            if (ans === "5GHZ") {
+                fb.innerHTML = '<div class="feedback correct">Benar!</div>';
+                showCert();
+            } else {
+                fb.innerHTML = '<div class="feedback incorrect">Salah. Jawaban: 5GHz.</div>';
+            }
+        }
+        function showRemedial(level) {
+            const remedialContent = document.getElementById('remedialContent');
+            let content = '<h3>Remedial Level ' + (level + 1) + '</h3>';
+            if (level === 0) {
+                content += '<p>Dasar: Standar 802.11a/b/g/n/ac/ax, Bluetooth, Zigbee basics.</p>';
+            } else if (level === 1) {
+                content += '<p>Menengah: Kecepatan, channel, SSID, modes, frames.</p>';
+            } else if (level === 2) {
+                content += '<p>Lanjutan: Modulation, CSMA/CA, QoS, Bluetooth profiles.</p>';
+            } else if (level === 3) {
+                content += '<p>Master: Advanced features, 5G components, Wi-Fi 6/7 specs.</p>';
+            }
+            remedialContent.innerHTML = content;
+            document.getElementById('remedial').classList.remove('hidden');
+        }
+        // Rest of script
+    </script>
+</body>
+</html>
